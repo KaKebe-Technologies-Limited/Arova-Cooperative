@@ -56,11 +56,11 @@ const animationStyles = `
 
 // --- DATA FROM UPLOADED DOCS ---
 
-const seoData = {
-  title: "Arova Producers & Cooperative Sacco",
-  description:
-    "Eradicating poverty through agricultural value addition and low interest loans in Lango Sub-region.",
-};
+// const seoData = {
+//   title: "Arova Producers & Cooperative Sacco",
+//   description:
+//     "Eradicating poverty through agricultural value addition and low interest loans in Lango Sub-region.",
+// };
 
 // Statistics from Source [cite: 20-25]
 const stats = [
@@ -1395,7 +1395,7 @@ const ArovaContent = () => {
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-emerald-900 font-bold text-xl">
-                <img src="./logo.png" />
+                <img src="./logo.png" alt="Arova Logo" />
               </div>
               <span className="font-bold text-xl text-white">Arova</span>
             </Link>
@@ -1405,25 +1405,33 @@ const ArovaContent = () => {
             </p>
             <div className="flex gap-4">
               <a
-                href="#"
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
               >
                 <Facebook size={18} />
               </a>
               <a
-                href="#"
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
               >
                 <Twitter size={18} />
               </a>
               <a
-                href="#"
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
               >
                 <Linkedin size={18} />
               </a>
               <a
-                href="#"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
               >
                 <Instagram size={18} />

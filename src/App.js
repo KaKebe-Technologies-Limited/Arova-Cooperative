@@ -5,7 +5,7 @@ import React, {
   createContext,
   useContext,
 } from "react";
-
+import AdminDashboard from "./AdminDashboard";
 import {
   Chart as ChartJS,
   BarController,
@@ -15,7 +15,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import {
   Menu,
@@ -27,20 +26,10 @@ import {
   MapPin,
   ArrowRight,
   Lock,
-  Plus,
-  Edit2,
-  Trash2,
   Phone,
   Mail,
   Calendar,
   Quote,
-  Palette,
-  FileText,
-  Eye,
-  CheckCircle,
-  Clock,
-  BarChart3,
-  ImageIcon,
 } from "lucide-react";
 import {
   FaTwitter,
@@ -55,9 +44,8 @@ import {
   Link,
   useLocation,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
-
-import AdminChart from "./AdminChart";
 
 ChartJS.register(
   BarController,
@@ -1026,393 +1014,6 @@ const BlogPage = ({ blogPosts }) => {
   );
 };
 
-// --- ADMIN PANEL ---
-const AdminDashboard = ({ blogPosts, setAdminTab, handleNewPost }) => {
-  const chartRef = useRef(null);
-
-  const stats = {
-    total: blogPosts.length,
-    views: blogPosts.reduce((sum, p) => sum + (p.views || 0), 0),
-    published: blogPosts.filter((p) => p.published).length,
-    drafts: blogPosts.filter((p) => !p.published).length,
-  };
-
-  <AdminChart
-    labels={blogPosts.slice(0, 5).map((p) => p.title.substring(0, 15) + "...")}
-    data={blogPosts.slice(0, 5).map((p) => p.views || 0)}
-  />;
-
-  return (
-    <div className="space-y-8 animate-fade-in-up">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 hover-lift">
-          <FileText className="text-emerald-600 mb-4" size={32} />
-          <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-gray-600">Total Posts</div>
-        </div>
-        <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 hover-lift">
-          <Eye className="text-blue-600 mb-4" size={32} />
-          <div className="text-3xl font-bold text-gray-900">
-            {stats.views.toLocaleString()}
-          </div>
-          <div className="text-gray-600">Total Views</div>
-        </div>
-        <div className="bg-green-50 p-6 rounded-2xl border border-green-100 hover-lift">
-          <CheckCircle className="text-green-600 mb-4" size={32} />
-          <div className="text-3xl font-bold text-gray-900">
-            {stats.published}
-          </div>
-          <div className="text-gray-600">Published</div>
-        </div>
-        <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 hover-lift">
-          <Clock className="text-orange-600 mb-4" size={32} />
-          <div className="text-3xl font-bold text-gray-900">{stats.drafts}</div>
-          <div className="text-gray-600">Drafts</div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <BarChart3 size={20} /> Post Performance
-          </h3>
-          <canvas ref={chartRef}></canvas>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
-          <div className="grid gap-4">
-            <button
-              onClick={handleNewPost}
-              className="gradient-bg p-4 rounded-xl text-white font-bold flex items-center gap-3"
-            >
-              <Plus /> New Blog Post
-            </button>
-            <button
-              onClick={() => setAdminTab("posts")}
-              className="bg-gray-100 p-4 rounded-xl text-gray-700 font-bold flex items-center gap-3"
-            >
-              <FileText /> Manage Posts
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AdminEditor = ({
-  editingPost,
-  setEditingPost,
-  handleSavePost,
-  setAdminTab,
-}) => {
-  const quillRef = useRef(null);
-  const quillInstance = useRef(null);
-
-  useEffect(() => {
-    if (quillRef.current && !quillInstance.current) {
-      quillInstance.current = new Quill(quillRef.current, {
-        theme: "snow",
-        modules: {
-          toolbar: [
-            [{ header: [1, 2, false] }],
-            ["bold", "italic", "underline"],
-            ["link", "image", "blockquote"],
-            [{ list: "ordered" }, { list: "bullet" }],
-          ],
-        },
-      });
-      quillInstance.current.root.innerHTML = editingPost.content || "";
-      quillInstance.current.on("text-change", () => {
-        setEditingPost((prev) => ({
-          ...prev,
-          content: quillInstance.current.root.innerHTML,
-        }));
-      });
-    }
-  }, [editingPost.content, setEditingPost]);
-
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        setEditingPost({ ...editingPost, image: reader.result });
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl animate-fade-in-up">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">
-          {editingPost.id ? "Edit Post" : "New Post"}
-        </h2>
-        <button
-          onClick={() => setAdminTab("posts")}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <X size={24} />
-        </button>
-      </div>
-      <div className="space-y-6">
-        <input
-          className="w-full text-2xl font-bold border-b-2 border-gray-100 py-2 outline-none focus:border-emerald-500"
-          placeholder="Post Title"
-          value={editingPost.title}
-          onChange={(e) =>
-            setEditingPost({ ...editingPost, title: e.target.value })
-          }
-        />
-        <div className="grid md:grid-cols-2 gap-6">
-          <select
-            className="w-full p-3 bg-gray-50 rounded-xl"
-            value={editingPost.category}
-            onChange={(e) =>
-              setEditingPost({ ...editingPost, category: e.target.value })
-            }
-          >
-            <option value="News">News</option>
-            <option value="Success Story">Success Story</option>
-            <option value="Impact">Impact</option>
-            <option value="Finance">Finance</option>
-            <option value="Community">Community</option>
-            <option value="Agriculture">Agriculture</option>
-          </select>
-          <select
-            className="w-full p-3 bg-gray-50 rounded-xl"
-            value={editingPost.published}
-            onChange={(e) =>
-              setEditingPost({
-                ...editingPost,
-                published: e.target.value === "true",
-              })
-            }
-          >
-            <option value="true">Published</option>
-            <option value="false">Draft</option>
-          </select>
-        </div>
-        <textarea
-          className="w-full p-4 bg-gray-50 rounded-xl resize-none"
-          rows="3"
-          placeholder="Short Excerpt..."
-          value={editingPost.excerpt}
-          onChange={(e) =>
-            setEditingPost({ ...editingPost, excerpt: e.target.value })
-          }
-        />
-        <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
-          {editingPost.image ? (
-            <div className="relative inline-block">
-              <img
-                src={editingPost.image}
-                alt="Preview"
-                className="max-h-48 rounded-lg"
-              />
-              <button
-                onClick={() => setEditingPost({ ...editingPost, image: "" })}
-                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          ) : (
-            <label className="cursor-pointer flex flex-col items-center">
-              <ImageIcon className="text-gray-400 mb-2" size={40} />
-              <span className="text-gray-500">Upload Featured Image</span>
-              <input
-                type="file"
-                className="hidden"
-                onChange={handleImage}
-                accept="image/*"
-              />
-            </label>
-          )}
-        </div>
-        <div className="h-80">
-          <div ref={quillRef}></div>
-        </div>
-        <div className="flex gap-4 pt-12">
-          <button
-            onClick={handleSavePost}
-            className="flex-1 gradient-bg text-white py-4 rounded-xl font-bold shadow-lg"
-          >
-            Save Post
-          </button>
-          <button
-            onClick={() => setAdminTab("posts")}
-            className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AdminPanel = ({
-  blogPosts,
-  handleAddPost,
-  handleLogout,
-  editingPost,
-  setEditingPost,
-  handleSavePost,
-  handleDeletePost,
-}) => {
-  const [adminTab, setAdminTab] = useState("dashboard");
-  const { primaryColor, setPrimaryColor, setCustomHex } =
-    useContext(ThemeContext);
-
-  const colors = [
-    { name: "emerald", hex: "#059669" },
-    { name: "blue", hex: "#2563eb" },
-    { name: "purple", hex: "#7c3aed" },
-    { name: "red", hex: "#dc2626" },
-  ];
-
-  if (adminTab === "editor" && editingPost) {
-    return (
-      <AdminEditor
-        editingPost={editingPost}
-        setEditingPost={setEditingPost}
-        handleSavePost={handleSavePost}
-        setAdminTab={setAdminTab}
-      />
-    );
-  }
-
-  return (
-    <div className="py-12 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-          <h1 className="text-4xl font-bold text-gray-900">Admin Panel</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setAdminTab("dashboard")}
-              className={`px-5 py-2 rounded-full font-medium ${
-                adminTab === "dashboard"
-                  ? "gradient-bg text-white"
-                  : "bg-white text-gray-600"
-              }`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => setAdminTab("posts")}
-              className={`px-5 py-2 rounded-full font-medium ${
-                adminTab === "posts"
-                  ? "gradient-bg text-white"
-                  : "bg-white text-gray-600"
-              }`}
-            >
-              Posts
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-5 py-2 bg-white border text-red-600 rounded-full font-medium hover:bg-red-50"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {adminTab === "dashboard" ? (
-          <AdminDashboard
-            blogPosts={blogPosts}
-            setAdminTab={setAdminTab}
-            handleNewPost={() => {
-              handleAddPost();
-              setAdminTab("editor");
-            }}
-          />
-        ) : (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Palette size={20} /> Website Theme
-              </h2>
-              <div className="flex items-center gap-4">
-                {colors.map((c) => (
-                  <button
-                    key={c.name}
-                    onClick={() => {
-                      setPrimaryColor(c.name);
-                      setCustomHex(null);
-                    }}
-                    className={`w-10 h-10 rounded-full border-4 ${
-                      primaryColor === c.name
-                        ? "border-gray-900 scale-110"
-                        : "border-transparent"
-                    }`}
-                    style={{ backgroundColor: c.hex }}
-                  />
-                ))}
-                <input
-                  type="color"
-                  onChange={(e) => setCustomHex(e.target.value)}
-                  className="w-10 h-10 cursor-pointer rounded-full overflow-hidden border-none"
-                />
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Manage Posts</h2>
-              <button
-                onClick={() => {
-                  handleAddPost();
-                  setAdminTab("editor");
-                }}
-                className="gradient-bg text-white px-6 py-2 rounded-xl flex items-center gap-2"
-              >
-                <Plus size={18} /> New Post
-              </button>
-            </div>
-            <div className="grid gap-4">
-              {blogPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-white p-4 rounded-2xl shadow-sm border flex items-center justify-between hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={post.image || "https://via.placeholder.com/100"}
-                      className="w-16 h-16 rounded-xl object-cover"
-                      alt=""
-                    />
-                    <div>
-                      <h3 className="font-bold text-gray-900">{post.title}</h3>
-                      <p className="text-sm text-gray-500">
-                        {post.date} • {post.views || 0} views
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingPost(post);
-                        setAdminTab("editor");
-                      }}
-                      className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
-                    >
-                      <Edit2 size={20} />
-                    </button>
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 // --- MAIN WRAPPER ---
 
 const ArovaContent = () => {
@@ -1421,7 +1022,6 @@ const ArovaContent = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [blogPosts, setBlogPosts] = useState([]);
-  const [editingPost, setEditingPost] = useState(null);
   const navigate = useNavigate();
   const { customHex } = useContext(ThemeContext);
   const primaryColor = customHex || "#059669";
@@ -1472,6 +1072,16 @@ const ArovaContent = () => {
           "In 2008, 15 women came together with a shared dream of transforming the welfare of their families. They pooled funds to borrow at low interest rates to overcome challenges. Today, that spirit drives over 19,000 clients.",
       },
       {
+        id: 6,
+        title: "Funding Our Future: 2 Billion UGX in Community Support",
+        excerpt:
+          "A look at how strategic funding and grants are accelerating our mission and expanding services to new districts.",
+        date: "Jul 15, 2024",
+        image:
+          "https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        category: "Finance",
+      },
+      {
         id: 5,
         title: "Serving the Lango and Acholi Sub-regions",
         excerpt:
@@ -1482,17 +1092,6 @@ const ArovaContent = () => {
         category: "Impact",
         content:
           "Our impact is no longer limited to one town. We now serve Lira City, Lira District, Alebtong, Oyam, Otuke, Apac, Dokolo, Kwania, Kole, and the Acholi sub-region. With permanent registration (Reg.No 12064/RCS), we are expanding our reach daily.",
-      },
-      {
-        id: 6,
-        title: "Funding Our Future: 2 Billion UGX in Community Support",
-        excerpt:
-          "A look at how strategic funding and grants are accelerating our mission and expanding services to new districts.",
-        date: "Jul 15, 2024",
-        image:
-          "https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        category: "Finance",
-        content: "...",
       },
     ];
 
@@ -1522,31 +1121,6 @@ const ArovaContent = () => {
     } else {
       alert("Wrong password. Hint: arova2024");
     }
-  };
-
-  const handleSavePost = () => {
-    if (!editingPost.title) return alert("Title is required");
-    const newPosts = editingPost.id
-      ? blogPosts.map((p) => (p.id === editingPost.id ? editingPost : p))
-      : [editingPost, ...blogPosts];
-    setBlogPosts(newPosts);
-    setEditingPost(null);
-  };
-
-  const handleDeletePost = (id) => {
-    if (window.confirm("Delete?"))
-      setBlogPosts(blogPosts.filter((p) => p.id !== id));
-  };
-  const handleAddPost = () => {
-    setEditingPost({
-      id: Date.now(),
-      title: "",
-      excerpt: "",
-      image: "",
-      content: "",
-      date: "Dec 14, 2025",
-      category: "News",
-    });
   };
 
   return (
@@ -1622,22 +1196,10 @@ const ArovaContent = () => {
           <Route path="/team" element={<TeamPage />} />
           <Route path="/blog" element={<BlogPage blogPosts={blogPosts} />} />
           <Route path="/contact" element={<ContactPage />} />
-          {isAdmin && (
-            <Route
-              path="/admin"
-              element={
-                <AdminPanel
-                  blogPosts={blogPosts}
-                  editingPost={editingPost}
-                  setEditingPost={setEditingPost}
-                  handleAddPost={handleAddPost}
-                  handleSavePost={handleSavePost}
-                  handleDeletePost={handleDeletePost}
-                  handleLogout={() => setIsAdmin(false)}
-                />
-              }
-            />
-          )}
+          <Route
+            path="/admin"
+            element={isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
+          />
         </Routes>
       </div>
 

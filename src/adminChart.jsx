@@ -27,7 +27,6 @@ export default function AdminChart({ labels, data }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-
     chartRef.current = new ChartJS(ctx, {
       type: "bar",
       data: {
@@ -42,14 +41,13 @@ export default function AdminChart({ labels, data }) {
         ],
       },
       options: {
-        responsive: false, // 🔴 important
+        responsive: false,
         animation: false,
         plugins: {
           legend: { display: false },
         },
       },
     });
-
     return () => {
       if (chartRef.current) {
         chartRef.current.destroy();

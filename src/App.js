@@ -5,6 +5,18 @@ import React, {
   createContext,
   useContext,
 } from "react";
+
+import {
+  Chart as ChartJS,
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
 import {
   Menu,
   X,
@@ -23,6 +35,12 @@ import {
   Calendar,
   Quote,
   Palette,
+  FileText,
+  Eye,
+  CheckCircle,
+  Clock,
+  BarChart3,
+  ImageIcon,
 } from "lucide-react";
 import {
   FaTwitter,
@@ -38,6 +56,17 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
+import AdminChart from "./AdminChart";
+
+ChartJS.register(
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend
+);
 
 // --- THEME CONTEXT ---
 const ThemeContext = createContext();
@@ -359,6 +388,58 @@ const BiographySection = () => {
   );
 };
 
+const FoundersMessage = () => {
+  const { customHex } = useContext(ThemeContext);
+  const primaryColor = customHex || "#059669";
+
+  return (
+    <div className="py-5 bg-emerald-50/50">
+      <div className="max-w-5xl mx-auto px-6">
+        <RevealOnScroll>
+          <div className="relative bg-white p-10 md:p-16 rounded-[3rem] shadow-xl overflow-hidden border border-emerald-100">
+            {/* Decorative background circle */}
+            <div
+              className="absolute -top-10 -right-10 w-40 h-40 opacity-10 rounded-full"
+              style={{ backgroundColor: primaryColor }}
+            ></div>
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <Quote
+                size={50}
+                className="mb-6 opacity-20"
+                style={{ color: primaryColor }}
+              />
+              <h2 className="text-2xl md:text-3xl font-medium italic text-gray-800 mb-8 leading-relaxed">
+                "Our journey began with just 15 women and a shared dream under a
+                tree. Today, Arova stands as a testament to what is possible
+                when we lead with humanity, transparency, and a commitment to
+                lifting one another out of poverty."
+              </h2>
+              <div className="flex flex-col items-center">
+                <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-4 border-white shadow-lg">
+                  <img
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop"
+                    alt="Brenda Komagum"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h4 className="font-bold text-xl text-gray-900">
+                  Brenda Komagum
+                </h4>
+                <p
+                  className="text-sm font-semibold uppercase tracking-widest"
+                  style={{ color: primaryColor }}
+                >
+                  Founder & General Manager
+                </p>
+              </div>
+            </div>
+          </div>
+        </RevealOnScroll>
+      </div>
+    </div>
+  );
+};
+
 // 2. Testimonials Section (Background updated to white for contrast)
 const TestimonialsSection = () => {
   const { customHex, getThemeClass } = useContext(ThemeContext);
@@ -492,6 +573,9 @@ const HomePage = ({ blogPosts, navigate }) => {
       {/* 2. Biography Section (Overlaps Hero) */}
       <BiographySection />
 
+      {/* 3. Founder's Message Section */}
+      <FoundersMessage />
+
       {/* 3. Stats Section (Gray background for contrast) */}
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
@@ -597,7 +681,7 @@ const HomePage = ({ blogPosts, navigate }) => {
             </div>
           </RevealOnScroll>
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {blogPosts.slice(0, 3).map((post, idx) => (
+            {blogPosts.slice(0, 6).map((post, idx) => (
               <RevealOnScroll key={post.id} delay={idx * 150}>
                 <div className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 flex flex-col h-full">
                   <div className="overflow-hidden h-56 relative shrink-0">
@@ -943,6 +1027,230 @@ const BlogPage = ({ blogPosts }) => {
 };
 
 // --- ADMIN PANEL ---
+const AdminDashboard = ({ blogPosts, setAdminTab, handleNewPost }) => {
+  const chartRef = useRef(null);
+
+  const stats = {
+    total: blogPosts.length,
+    views: blogPosts.reduce((sum, p) => sum + (p.views || 0), 0),
+    published: blogPosts.filter((p) => p.published).length,
+    drafts: blogPosts.filter((p) => !p.published).length,
+  };
+
+  <AdminChart
+    labels={blogPosts.slice(0, 5).map((p) => p.title.substring(0, 15) + "...")}
+    data={blogPosts.slice(0, 5).map((p) => p.views || 0)}
+  />;
+
+  return (
+    <div className="space-y-8 animate-fade-in-up">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 hover-lift">
+          <FileText className="text-emerald-600 mb-4" size={32} />
+          <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+          <div className="text-gray-600">Total Posts</div>
+        </div>
+        <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 hover-lift">
+          <Eye className="text-blue-600 mb-4" size={32} />
+          <div className="text-3xl font-bold text-gray-900">
+            {stats.views.toLocaleString()}
+          </div>
+          <div className="text-gray-600">Total Views</div>
+        </div>
+        <div className="bg-green-50 p-6 rounded-2xl border border-green-100 hover-lift">
+          <CheckCircle className="text-green-600 mb-4" size={32} />
+          <div className="text-3xl font-bold text-gray-900">
+            {stats.published}
+          </div>
+          <div className="text-gray-600">Published</div>
+        </div>
+        <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 hover-lift">
+          <Clock className="text-orange-600 mb-4" size={32} />
+          <div className="text-3xl font-bold text-gray-900">{stats.drafts}</div>
+          <div className="text-gray-600">Drafts</div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <BarChart3 size={20} /> Post Performance
+          </h3>
+          <canvas ref={chartRef}></canvas>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
+          <div className="grid gap-4">
+            <button
+              onClick={handleNewPost}
+              className="gradient-bg p-4 rounded-xl text-white font-bold flex items-center gap-3"
+            >
+              <Plus /> New Blog Post
+            </button>
+            <button
+              onClick={() => setAdminTab("posts")}
+              className="bg-gray-100 p-4 rounded-xl text-gray-700 font-bold flex items-center gap-3"
+            >
+              <FileText /> Manage Posts
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminEditor = ({
+  editingPost,
+  setEditingPost,
+  handleSavePost,
+  setAdminTab,
+}) => {
+  const quillRef = useRef(null);
+  const quillInstance = useRef(null);
+
+  useEffect(() => {
+    if (quillRef.current && !quillInstance.current) {
+      quillInstance.current = new Quill(quillRef.current, {
+        theme: "snow",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, false] }],
+            ["bold", "italic", "underline"],
+            ["link", "image", "blockquote"],
+            [{ list: "ordered" }, { list: "bullet" }],
+          ],
+        },
+      });
+      quillInstance.current.root.innerHTML = editingPost.content || "";
+      quillInstance.current.on("text-change", () => {
+        setEditingPost((prev) => ({
+          ...prev,
+          content: quillInstance.current.root.innerHTML,
+        }));
+      });
+    }
+  }, [editingPost.content, setEditingPost]);
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () =>
+        setEditingPost({ ...editingPost, image: reader.result });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl animate-fade-in-up">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">
+          {editingPost.id ? "Edit Post" : "New Post"}
+        </h2>
+        <button
+          onClick={() => setAdminTab("posts")}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <X size={24} />
+        </button>
+      </div>
+      <div className="space-y-6">
+        <input
+          className="w-full text-2xl font-bold border-b-2 border-gray-100 py-2 outline-none focus:border-emerald-500"
+          placeholder="Post Title"
+          value={editingPost.title}
+          onChange={(e) =>
+            setEditingPost({ ...editingPost, title: e.target.value })
+          }
+        />
+        <div className="grid md:grid-cols-2 gap-6">
+          <select
+            className="w-full p-3 bg-gray-50 rounded-xl"
+            value={editingPost.category}
+            onChange={(e) =>
+              setEditingPost({ ...editingPost, category: e.target.value })
+            }
+          >
+            <option value="News">News</option>
+            <option value="Success Story">Success Story</option>
+            <option value="Impact">Impact</option>
+            <option value="Finance">Finance</option>
+            <option value="Community">Community</option>
+            <option value="Agriculture">Agriculture</option>
+          </select>
+          <select
+            className="w-full p-3 bg-gray-50 rounded-xl"
+            value={editingPost.published}
+            onChange={(e) =>
+              setEditingPost({
+                ...editingPost,
+                published: e.target.value === "true",
+              })
+            }
+          >
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
+          </select>
+        </div>
+        <textarea
+          className="w-full p-4 bg-gray-50 rounded-xl resize-none"
+          rows="3"
+          placeholder="Short Excerpt..."
+          value={editingPost.excerpt}
+          onChange={(e) =>
+            setEditingPost({ ...editingPost, excerpt: e.target.value })
+          }
+        />
+        <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+          {editingPost.image ? (
+            <div className="relative inline-block">
+              <img
+                src={editingPost.image}
+                alt="Preview"
+                className="max-h-48 rounded-lg"
+              />
+              <button
+                onClick={() => setEditingPost({ ...editingPost, image: "" })}
+                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <label className="cursor-pointer flex flex-col items-center">
+              <ImageIcon className="text-gray-400 mb-2" size={40} />
+              <span className="text-gray-500">Upload Featured Image</span>
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleImage}
+                accept="image/*"
+              />
+            </label>
+          )}
+        </div>
+        <div className="h-80">
+          <div ref={quillRef}></div>
+        </div>
+        <div className="flex gap-4 pt-12">
+          <button
+            onClick={handleSavePost}
+            className="flex-1 gradient-bg text-white py-4 rounded-xl font-bold shadow-lg"
+          >
+            Save Post
+          </button>
+          <button
+            onClick={() => setAdminTab("posts")}
+            className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminPanel = ({
   blogPosts,
@@ -953,165 +1261,158 @@ const AdminPanel = ({
   handleSavePost,
   handleDeletePost,
 }) => {
+  const [adminTab, setAdminTab] = useState("dashboard");
   const { primaryColor, setPrimaryColor, setCustomHex } =
     useContext(ThemeContext);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditingPost({ ...editingPost, image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const colors = [
-    { name: "emerald", hex: "#059669", label: "Emerald" },
-    { name: "blue", hex: "#2563eb", label: "Blue" },
-    { name: "purple", hex: "#7c3aed", label: "Purple" },
-    { name: "red", hex: "#dc2626", label: "Red" },
-    { name: "orange", hex: "#ea580c", label: "Orange" },
+    { name: "emerald", hex: "#059669" },
+    { name: "blue", hex: "#2563eb" },
+    { name: "purple", hex: "#7c3aed" },
+    { name: "red", hex: "#dc2626" },
   ];
 
+  if (adminTab === "editor" && editingPost) {
+    return (
+      <AdminEditor
+        editingPost={editingPost}
+        setEditingPost={setEditingPost}
+        handleSavePost={handleSavePost}
+        setAdminTab={setAdminTab}
+      />
+    );
+  }
+
   return (
-    <div className="py-20 bg-gray-50 min-h-screen">
+    <div className="py-12 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Admin Dashboard
-            </h1>
-          </div>
-          <div className="flex gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <h1 className="text-4xl font-bold text-gray-900">Admin Panel</h1>
+          <div className="flex gap-3">
             <button
-              onClick={handleAddPost}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-xl flex gap-2 items-center hover:bg-emerald-700 transition shadow-lg"
+              onClick={() => setAdminTab("dashboard")}
+              className={`px-5 py-2 rounded-full font-medium ${
+                adminTab === "dashboard"
+                  ? "gradient-bg text-white"
+                  : "bg-white text-gray-600"
+              }`}
             >
-              <Plus size={18} /> New Post
+              Dashboard
+            </button>
+            <button
+              onClick={() => setAdminTab("posts")}
+              className={`px-5 py-2 rounded-full font-medium ${
+                adminTab === "posts"
+                  ? "gradient-bg text-white"
+                  : "bg-white text-gray-600"
+              }`}
+            >
+              Posts
             </button>
             <button
               onClick={handleLogout}
-              className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-50 transition"
+              className="px-5 py-2 bg-white border text-red-600 rounded-full font-medium hover:bg-red-50"
             >
               Logout
             </button>
           </div>
         </div>
 
-        {/* --- THEME SETTINGS --- */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Palette size={20} /> Website Theme Color
-          </h2>
-          <div className="flex flex-wrap gap-4 items-center">
-            {colors.map((c) => (
-              <button
-                key={c.name}
-                onClick={() => {
-                  setPrimaryColor(c.name);
-                  setCustomHex(null);
-                }}
-                className={`w-10 h-10 rounded-full border-2 transition-all ${
-                  primaryColor === c.name && !setCustomHex
-                    ? "ring-2 ring-offset-2 ring-gray-400 scale-110"
-                    : ""
-                }`}
-                style={{ backgroundColor: c.hex, borderColor: "white" }}
-                title={c.label}
-              />
-            ))}
-            <div className="flex items-center gap-2 border-l pl-4 ml-2">
-              <span className="text-sm text-gray-500">Custom Hex:</span>
-              <input
-                type="color"
-                onChange={(e) => setCustomHex(e.target.value)}
-                className="w-10 h-10 cursor-pointer rounded overflow-hidden border-0"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Post Editor */}
-        {editingPost ? (
-          <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 animate-fade-in-up">
-            <div className="space-y-6">
-              <input
-                className="w-full border p-4 rounded-xl"
-                placeholder="Title"
-                value={editingPost.title}
-                onChange={(e) =>
-                  setEditingPost({ ...editingPost, title: e.target.value })
-                }
-              />
-              <textarea
-                className="w-full border p-4 rounded-xl"
-                rows="4"
-                placeholder="Content"
-                value={editingPost.content}
-                onChange={(e) =>
-                  setEditingPost({ ...editingPost, content: e.target.value })
-                }
-              />
-              <div className="border-2 border-dashed p-4 text-center">
-                <input type="file" onChange={handleImageUpload} />
-              </div>
-            </div>
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={handleSavePost}
-                className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold"
-              >
-                Save Post
-              </button>
-              <button
-                onClick={() => setEditingPost(null)}
-                className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {adminTab === "dashboard" ? (
+          <AdminDashboard
+            blogPosts={blogPosts}
+            setAdminTab={setAdminTab}
+            handleNewPost={() => {
+              handleAddPost();
+              setAdminTab("editor");
+            }}
+          />
         ) : (
-          <div className="grid gap-4">
-            {/* List of posts */}
-            {blogPosts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={post.image}
-                    className="w-16 h-16 rounded-lg object-cover"
-                    alt=""
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Palette size={20} /> Website Theme
+              </h2>
+              <div className="flex items-center gap-4">
+                {colors.map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => {
+                      setPrimaryColor(c.name);
+                      setCustomHex(null);
+                    }}
+                    className={`w-10 h-10 rounded-full border-4 ${
+                      primaryColor === c.name
+                        ? "border-gray-900 scale-110"
+                        : "border-transparent"
+                    }`}
+                    style={{ backgroundColor: c.hex }}
                   />
-                  <h3 className="font-bold">{post.title}</h3>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setEditingPost(post)}
-                    className="p-2 text-blue-600 bg-blue-50 rounded"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDeletePost(post.id)}
-                    className="p-2 text-red-600 bg-red-50 rounded"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                ))}
+                <input
+                  type="color"
+                  onChange={(e) => setCustomHex(e.target.value)}
+                  className="w-10 h-10 cursor-pointer rounded-full overflow-hidden border-none"
+                />
               </div>
-            ))}
+            </div>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Manage Posts</h2>
+              <button
+                onClick={() => {
+                  handleAddPost();
+                  setAdminTab("editor");
+                }}
+                className="gradient-bg text-white px-6 py-2 rounded-xl flex items-center gap-2"
+              >
+                <Plus size={18} /> New Post
+              </button>
+            </div>
+            <div className="grid gap-4">
+              {blogPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="bg-white p-4 rounded-2xl shadow-sm border flex items-center justify-between hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={post.image || "https://via.placeholder.com/100"}
+                      className="w-16 h-16 rounded-xl object-cover"
+                      alt=""
+                    />
+                    <div>
+                      <h3 className="font-bold text-gray-900">{post.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {post.date} • {post.views || 0} views
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingPost(post);
+                        setAdminTab("editor");
+                      }}
+                      className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    >
+                      <Edit2 size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 };
-
 // --- MAIN WRAPPER ---
 
 const ArovaContent = () => {
@@ -1126,37 +1427,92 @@ const ArovaContent = () => {
   const primaryColor = customHex || "#059669";
 
   useEffect(() => {
+    // 1. Define your full list of defaults first
+    const defaultPosts = [
+      {
+        id: 1,
+        title: "From 15 Women to 19,000+ Members",
+        excerpt: "How a small savings group transformed the region.",
+        date: "Dec 14, 2024",
+        image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
+        category: "Success Story",
+        content: "...",
+      },
+      {
+        id: 2,
+        title: "Breaking the Poverty Cycle",
+        excerpt: "Low interest loans are changing lives.",
+        date: "Nov 20, 2024",
+        image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a",
+        category: "Finance",
+        content: "...",
+      },
+      {
+        id: 3,
+        title: "Revolutionizing Agriculture via Value Addition",
+        excerpt:
+          "Moving beyond subsistence farming: How we help members process produce for better market prices.",
+        date: "Oct 15, 2024",
+        image:
+          "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80",
+        category: "Agriculture",
+        content:
+          "Our mission focuses on eradicating poverty through value addition on agricultural products and linking members to markets. By processing raw harvests, our farmers command higher prices nationally and internationally.",
+      },
+      {
+        id: 4,
+        title: "The Power of a Shared Dream",
+        excerpt:
+          "It started with 15 women and a vision to transform family welfare.",
+        date: "Sep 08, 2024",
+        image:
+          "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&q=80",
+        category: "Community",
+        content:
+          "In 2008, 15 women came together with a shared dream of transforming the welfare of their families. They pooled funds to borrow at low interest rates to overcome challenges. Today, that spirit drives over 19,000 clients.",
+      },
+      {
+        id: 5,
+        title: "Serving the Lango and Acholi Sub-regions",
+        excerpt:
+          "We have expanded our operations to cover 10+ districts including Lira, Oyam, and Dokolo.",
+        date: "Aug 22, 2024",
+        image:
+          "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=800&q=80",
+        category: "Impact",
+        content:
+          "Our impact is no longer limited to one town. We now serve Lira City, Lira District, Alebtong, Oyam, Otuke, Apac, Dokolo, Kwania, Kole, and the Acholi sub-region. With permanent registration (Reg.No 12064/RCS), we are expanding our reach daily.",
+      },
+      {
+        id: 6,
+        title: "Funding Our Future: 2 Billion UGX in Community Support",
+        excerpt:
+          "A look at how strategic funding and grants are accelerating our mission and expanding services to new districts.",
+        date: "Jul 15, 2024",
+        image:
+          "https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        category: "Finance",
+        content: "...",
+      },
+    ];
+
+    // 2. Check Local Storage
     const savedPosts = localStorage.getItem("arova_blog_posts");
+
     if (savedPosts) {
-      setBlogPosts(JSON.parse(savedPosts));
+      const parsedPosts = JSON.parse(savedPosts);
+
+      // THE FIX: If the saved data has fewer posts than our new default (5),
+      // assume it is old data and overwrite it.
+      if (parsedPosts.length < defaultPosts.length) {
+        setBlogPosts(defaultPosts);
+      } else {
+        setBlogPosts(parsedPosts);
+      }
     } else {
-      setBlogPosts([
-        {
-          id: 1,
-          title: "From 15 Women to 19,000+ Members",
-          excerpt: "How a small savings group transformed the region.",
-          date: "Dec 14, 2024",
-          image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
-          category: "Success Story",
-          content: "...",
-        },
-        {
-          id: 2,
-          title: "Breaking the Poverty Cycle",
-          excerpt: "Low interest loans are changing lives.",
-          date: "Nov 20, 2024",
-          image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a",
-          category: "Finance",
-          content: "...",
-        },
-      ]);
+      setBlogPosts(defaultPosts);
     }
   }, []);
-
-  useEffect(() => {
-    if (blogPosts.length > 0)
-      localStorage.setItem("arova_blog_posts", JSON.stringify(blogPosts));
-  }, [blogPosts]);
 
   const handleAdminLogin = () => {
     if (adminPassword === "arova2024") {

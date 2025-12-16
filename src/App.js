@@ -57,7 +57,7 @@ ChartJS.register(
 );
 
 // --- THEME CONTEXT ---
-const ThemeContext = createContext();
+export const ThemeContext = createContext();
 
 const ThemeProvider = ({ children }) => {
   const [primaryColor, setPrimaryColor] = useState("emerald");
@@ -1207,7 +1207,7 @@ const ArovaContent = () => {
       {showAdminLogin && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
-            <h2 className="text-2xl font-bold mb-4">Staff Access</h2>
+            <h2 className="text-2xl font-bold mb-4">Admin Access</h2>
             <input
               type="password"
               value={adminPassword}

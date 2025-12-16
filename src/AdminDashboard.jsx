@@ -24,11 +24,8 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { SketchPicker } from "react-color";
 
-// Import the ThemeContext from App.js
-// Note: Ensure `export { ThemeContext }` is added to your App.js exports for this to work perfectly.
-import { ThemeContext } from "./App";
+import { ThemeContext } from "./ThemeContext";
 
-// --- MOCK DATA FOR TEAM (Read Only) ---
 const MOCK_TEAM = [
   { name: "Brenda Komagum", role: "Manager" },
   { name: "Denis Peter Odongo", role: "Head Finance" },
@@ -44,8 +41,6 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  // --- THEME CONTEXT INTEGRATION ---
-  // We try to use the context, but fallback to local state if context isn't exported/available
   const themeContext = useContext(ThemeContext);
   const {
     primaryColor = "emerald",
@@ -54,16 +49,22 @@ const AdminDashboard = () => {
     setCustomHex = () => {},
   } = themeContext || {};
 
-  // --- BLOG CONTENT STATE ---
   const [posts, setPosts] = useState([]);
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // --- INITIALIZATION ---
-  // --- INITIALIZATION ---
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike"],
+      ["image", "link"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["clean"],
+    ],
+  };
+
   useEffect(() => {
-    // Define the full set of default posts explicitly here to ensure we have the master list
     const defaults = [
       {
         id: 1,
@@ -144,7 +145,6 @@ const AdminDashboard = () => {
 
     if (savedPosts) {
       const parsed = JSON.parse(savedPosts);
-      // FIX: If stored data has fewer items than defaults, assume it's stale and update it.
       if (parsed.length < defaults.length) {
         setPosts(defaults);
         localStorage.setItem("arova_blog_posts", JSON.stringify(defaults));
@@ -162,10 +162,7 @@ const AdminDashboard = () => {
     localStorage.setItem("arova_blog_posts", JSON.stringify(updatedPosts));
   };
 
-  // --- HANDLERS ---
   const handleLogout = () => {
-    // Since App.js doesn't expose a logout setter via props,
-    // a page reload clears the `isAdmin` state (which is not persisted).
     window.location.href = "/";
   };
 
@@ -204,21 +201,17 @@ const AdminDashboard = () => {
     setIsUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    // Use a standard unsigned preset or environment variable
     formData.append(
       "upload_preset",
       process.env.REACT_APP_CLOUDINARY_PRESET || "arova_uploads"
     );
-    // Replace with your Cloud Name in .env or hardcode for testing
     const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "demo";
 
     try {
-      // Fallback to a placeholder if no cloud name is configured, to prevent app crash during demo
       if (
         cloudName === "demo" &&
         !process.env.REACT_APP_CLOUDINARY_CLOUD_NAME
       ) {
-        // Simulation for demo purposes if no backend configured
         setTimeout(() => {
           setCurrentPost({
             ...currentPost,
@@ -254,8 +247,6 @@ const AdminDashboard = () => {
     };
     return customHex || colors[primaryColor] || colors.emerald;
   };
-
-  // --- VIEWS ---
 
   const StatCard = ({ label, value, icon: Icon, color }) => (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
@@ -359,7 +350,7 @@ const AdminDashboard = () => {
     );
   };
 
-  const StoriesView = () => (
+  const renderStoriesView = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
@@ -516,9 +507,10 @@ const AdminDashboard = () => {
                 <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
                   <ReactQuill
                     theme="snow"
-                    value={currentPost.content || ""}
+                    modules={quillModules}
+                    value={currentPost.title || ""}
                     onChange={(content) =>
-                      setCurrentPost({ ...currentPost, content })
+                      setCurrentPost({ ...currentPost, title: content })
                     }
                     className="h-64 mb-12"
                   />
@@ -841,7 +833,7 @@ const AdminDashboard = () => {
               className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm"
               style={{ color: getThemeHex() }}
             >
-              AD
+              A
             </div>
           </div>
         </header>
@@ -849,7 +841,7 @@ const AdminDashboard = () => {
         <div className="flex-1 overflow-y-auto p-6 md:p-10">
           <div className="max-w-7xl mx-auto">
             {activeTab === "dashboard" && <DashboardView />}
-            {activeTab === "stories" && <StoriesView />}
+            {activeTab === "stories" && renderStoriesView()}
             {activeTab === "team" && <TeamView />}
             {activeTab === "settings" && <SettingsView />}
           </div>

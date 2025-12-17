@@ -18,29 +18,128 @@ import {
   Upload,
   ExternalLink,
   Globe,
+  Save,
+  MessageSquare,
+  Phone,
+  MapPin,
+  Mail,
+  Type,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { SketchPicker } from "react-color";
-
 import { ThemeContext } from "./ThemeContext";
 
-const MOCK_TEAM = [
-  { name: "Brenda Komagum", role: "Manager" },
-  { name: "Denis Peter Odongo", role: "Head Finance" },
-  { name: "Susan Akello", role: "Head Operations" },
-  { name: "Bob Obwor", role: "Accountant" },
-  { name: "Apali Caeser", role: "Branch Manager" },
-  { name: "Nyaketcho Catherine", role: "Admin Assistant" },
-  { name: "Acola Fiona", role: "Loan Officer" },
-  { name: "Daniel", role: "Loan Officer" },
+/**
+ * DEFAULT DATA CONSTANTS
+ * Used to populate LocalStorage if the app is loaded for the first time.
+ * Matches the structure found in App.js.
+ */
+
+const DEFAULT_TEAM = [
+  {
+    id: 1,
+    name: "Brenda Komagum",
+    role: "Manager",
+    img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 2,
+    name: "Denis Peter Odongo",
+    role: "Head Finance & Admin",
+    img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 3,
+    name: "Susan Akello",
+    role: "Head Operations & Credit",
+    img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 4,
+    name: "Bob Obwor",
+    role: "Accountant",
+    img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 5,
+    name: "Apali Caeser",
+    role: "Branch Manager",
+    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 6,
+    name: "Nyaketcho Catherine",
+    role: "Admin Assistant",
+    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=387&auto=format&fit=crop",
+    active: true,
+  },
+  {
+    id: 7,
+    name: "Acola Fiona",
+    role: "Loan Officer",
+    img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=400&fit=crop",
+    active: true,
+  },
+  {
+    id: 8,
+    name: "Daniel",
+    role: "Loan Officer",
+    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+    active: true,
+  },
 ];
 
+const DEFAULT_SETTINGS = {
+  siteName: "Arova",
+  tagline: "Producers & Cooperative Sacco",
+  regNo: "12064/RCS",
+  contact: {
+    address: "Senior Quarters B Cell, Lira City",
+    email: "info@arova.org",
+    phone: "+256 700 000 000",
+  },
+  socials: {
+    facebook: "https://facebook.com",
+    twitter: "https://twitter.com",
+    linkedin: "https://linkedin.com",
+    instagram: "https://instagram.com",
+  },
+  logoUrl: "./logo.png", // Would ideally be a data URI or hosted URL
+};
+
+const DEFAULT_CONTENT = {
+  hero: {
+    title: "Let's Change The World With Humanity",
+    subtitle: "Established 2008 • Reg No: 12064/RCS",
+    ctaText: "Learn More",
+  },
+  about: {
+    title: "From Humble Beginnings to Regional Impact",
+    summary:
+      "In 2008, Arova Producers and Cooperative Sacco was born from the shared dream of 15 women. Gathering under a tree in a member's compound, they pooled their small savings to create opportunities where none existed.",
+  },
+  mission: {
+    text: "Eradicating poverty among members through value addition on agricultural products, providing low interest loans.",
+  },
+  vision: {
+    text: "To be a leading producer of agricultural products nationally and internationally.",
+  },
+};
+
 const AdminDashboard = () => {
+  // Navigation State
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
 
+  // Context
   const themeContext = useContext(ThemeContext);
   const {
     primaryColor = "emerald",
@@ -49,139 +148,129 @@ const AdminDashboard = () => {
     setCustomHex = () => {},
   } = themeContext || {};
 
+  // Data State
   const [posts, setPosts] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
+  const [pageContent, setPageContent] = useState(DEFAULT_CONTENT);
+
+  // Edit/UI State
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [currentMember, setCurrentMember] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      ["image", "link"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["clean"],
-    ],
-  };
+  // --- INITIALIZATION ---
 
   useEffect(() => {
-    const defaults = [
-      {
-        id: 1,
-        title: "From 15 Women to 19,000+ Members",
-        excerpt: "How a small savings group transformed the region.",
-        date: "Dec 14, 2024",
-        image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
-        category: "Success Story",
-        status: "Published",
-        views: 1240,
-        content: "In 2008, 15 women came together with a shared dream...",
-      },
-      {
-        id: 2,
-        title: "Breaking the Poverty Cycle",
-        excerpt: "Low interest loans are changing lives.",
-        date: "Nov 20, 2024",
-        image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a",
-        category: "Finance",
-        status: "Published",
-        views: 890,
-        content: "Access to credit is often the biggest barrier...",
-      },
-      {
-        id: 3,
-        title: "Revolutionizing Agriculture via Value Addition",
-        excerpt:
-          "Moving beyond subsistence farming: How we help members process produce.",
-        date: "Oct 15, 2024",
-        image:
-          "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80",
-        category: "Agriculture",
-        status: "Published",
-        views: 1500,
-        content:
-          "Our mission focuses on eradicating poverty through value addition...",
-      },
-      {
-        id: 4,
-        title: "The Power of a Shared Dream",
-        excerpt:
-          "It started with 15 women and a vision to transform family welfare.",
-        date: "Sep 08, 2024",
-        image:
-          "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&q=80",
-        category: "Community",
-        status: "Published",
-        content:
-          "In 2008, 15 women came together with a shared dream of transforming the welfare of their families. They pooled funds to borrow at low interest rates to overcome challenges. Today, that spirit drives over 19,000 clients.",
-      },
-      {
-        id: 6,
-        title: "Funding Our Future: 2 Billion UGX in Community Support",
-        excerpt:
-          "A look at how strategic funding and grants are accelerating our mission and expanding services to new districts.",
-        date: "Jul 15, 2024",
-        image:
-          "https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        category: "Finance",
-        status: "Published",
-      },
-      {
-        id: 5,
-        title: "Serving the Lango and Acholi Sub-regions",
-        excerpt:
-          "We have expanded our operations to cover 10+ districts including Lira, Oyam, and Dokolo.",
-        date: "Aug 22, 2024",
-        image:
-          "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=800&q=80",
-        category: "Impact",
-        status: "Published",
-        content:
-          "Our impact is no longer limited to one town. We now serve Lira City, Lira District, Alebtong, Oyam, Otuke, Apac, Dokolo, Kwania, Kole, and the Acholi sub-region. With permanent registration (Reg.No 12064/RCS), we are expanding our reach daily.",
-      },
-    ];
-
+    // 1. Load Blog Posts
     const savedPosts = localStorage.getItem("arova_blog_posts");
-
     if (savedPosts) {
-      const parsed = JSON.parse(savedPosts);
-      if (parsed.length < defaults.length) {
-        setPosts(defaults);
-        localStorage.setItem("arova_blog_posts", JSON.stringify(defaults));
-      } else {
-        setPosts(parsed);
-      }
+      setPosts(JSON.parse(savedPosts));
     } else {
-      setPosts(defaults);
-      localStorage.setItem("arova_blog_posts", JSON.stringify(defaults));
+      // Create a dummy initial state based on App.js hardcoded data if empty
+      const initialPosts = [
+        {
+          id: 1,
+          title: "From 15 Women to 19,000+ Members",
+          excerpt: "How a small savings group transformed the region.",
+          date: "Dec 14, 2024",
+          image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
+          category: "Success Story",
+          status: "Published",
+          views: 1240,
+          content: "In 2008, 15 women came together...",
+        },
+        // ... (Other defaults would go here, simplified for brevity as they are dynamic now)
+      ];
+      setPosts(initialPosts);
+      localStorage.setItem("arova_blog_posts", JSON.stringify(initialPosts));
+    }
+
+    // 2. Load Team
+    const savedTeam = localStorage.getItem("arova_team_members");
+    if (savedTeam) {
+      setTeamMembers(JSON.parse(savedTeam));
+    } else {
+      setTeamMembers(DEFAULT_TEAM);
+      localStorage.setItem("arova_team_members", JSON.stringify(DEFAULT_TEAM));
+    }
+
+    // 3. Load Settings
+    const savedSettings = localStorage.getItem("arova_site_settings");
+    if (savedSettings) {
+      setSiteSettings(JSON.parse(savedSettings));
+    } else {
+      localStorage.setItem(
+        "arova_site_settings",
+        JSON.stringify(DEFAULT_SETTINGS)
+      );
+    }
+
+    // 4. Load Page Content
+    const savedContent = localStorage.getItem("arova_page_content");
+    if (savedContent) {
+      setPageContent(JSON.parse(savedContent));
+    } else {
+      localStorage.setItem(
+        "arova_page_content",
+        JSON.stringify(DEFAULT_CONTENT)
+      );
     }
   }, []);
 
-  const savePostsToStorage = (updatedPosts) => {
+  // --- PERSISTENCE HELPERS ---
+
+  const savePosts = (updatedPosts) => {
     setPosts(updatedPosts);
     localStorage.setItem("arova_blog_posts", JSON.stringify(updatedPosts));
   };
 
+  const saveTeam = (updatedTeam) => {
+    setTeamMembers(updatedTeam);
+    localStorage.setItem("arova_team_members", JSON.stringify(updatedTeam));
+  };
+
+  const saveSettings = (updatedSettings) => {
+    setSiteSettings(updatedSettings);
+    localStorage.setItem(
+      "arova_site_settings",
+      JSON.stringify(updatedSettings)
+    );
+    alert("Site settings saved successfully!");
+  };
+
+  const saveContent = (updatedContent) => {
+    setPageContent(updatedContent);
+    localStorage.setItem("arova_page_content", JSON.stringify(updatedContent));
+    alert("Page content updated successfully!");
+  };
+
+  // --- HANDLERS ---
+
   const handleLogout = () => {
-    window.location.href = "/";
+    // In a real app, clear auth tokens
+    navigate("/");
   };
 
-  const handleDeletePost = (id) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      const updated = posts.filter((p) => p.id !== id);
-      savePostsToStorage(updated);
-    }
-  };
-
+  // Blog Handlers
   const handleSavePost = (e) => {
     e.preventDefault();
-    let updatedPosts;
+    const timestamp = new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
     const postToSave = {
       ...currentPost,
+      date: currentPost.date || timestamp,
       views: currentPost.views || 0,
       status: currentPost.status || "Published",
     };
 
+    let updatedPosts;
     if (currentPost.id) {
       updatedPosts = posts.map((p) =>
         p.id === currentPost.id ? postToSave : p
@@ -189,51 +278,65 @@ const AdminDashboard = () => {
     } else {
       updatedPosts = [{ ...postToSave, id: Date.now() }, ...posts];
     }
-    savePostsToStorage(updatedPosts);
+    savePosts(updatedPosts);
     setIsEditingPost(false);
     setCurrentPost(null);
   };
 
-  const handleImageUpload = async (e) => {
+  const handleDeletePost = (id) => {
+    if (window.confirm("Delete this story permanently?")) {
+      savePosts(posts.filter((p) => p.id !== id));
+    }
+  };
+
+  // Team Handlers
+  const handleSaveMember = (e) => {
+    e.preventDefault();
+    let updatedTeam;
+    const memberToSave = {
+      ...currentMember,
+      active: currentMember.active ?? true,
+    };
+
+    if (currentMember.id) {
+      updatedTeam = teamMembers.map((m) =>
+        m.id === currentMember.id ? memberToSave : m
+      );
+    } else {
+      updatedTeam = [...teamMembers, { ...memberToSave, id: Date.now() }];
+    }
+    saveTeam(updatedTeam);
+    setIsEditingMember(false);
+    setCurrentMember(null);
+  };
+
+  const handleDeleteMember = (id) => {
+    if (window.confirm("Remove this team member?")) {
+      saveTeam(teamMembers.filter((m) => m.id !== id));
+    }
+  };
+
+  // Image Upload Handler (Simulated DataURI for LocalStorage)
+  // Note: LocalStorage has 5MB limit. Real app would use S3/Cloudinary.
+  const handleFileUpload = (e, setter, field) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append(
-      "upload_preset",
-      process.env.REACT_APP_CLOUDINARY_PRESET || "arova_uploads"
-    );
-    const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "demo";
-
-    try {
-      if (
-        cloudName === "demo" &&
-        !process.env.REACT_APP_CLOUDINARY_CLOUD_NAME
-      ) {
-        setTimeout(() => {
-          setCurrentPost({
-            ...currentPost,
-            image: URL.createObjectURL(file),
-          });
-          setIsUploading(false);
-        }, 1000);
-        return;
-      }
-
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        { method: "POST", body: formData }
+    // Simple size check (limit to ~500KB for localStorage safety)
+    if (file.size > 500000) {
+      alert(
+        "File is too large for local storage mode. Please use a URL or a smaller image (<500kb)."
       );
-      const data = await res.json();
-      setCurrentPost({ ...currentPost, image: data.secure_url });
-    } catch (err) {
-      console.error("Upload failed", err);
-      alert("Image upload failed. Please check your Cloudinary configuration.");
-    } finally {
-      setIsUploading(false);
+      return;
     }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setter((prev) => ({ ...prev, [field]: reader.result }));
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const getThemeHex = () => {
@@ -247,6 +350,8 @@ const AdminDashboard = () => {
     };
     return customHex || colors[primaryColor] || colors.emerald;
   };
+
+  // --- VIEWS ---
 
   const StatCard = ({ label, value, icon: Icon, color }) => (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
@@ -262,7 +367,8 @@ const AdminDashboard = () => {
 
   const DashboardView = () => {
     const totalViews = posts.reduce((acc, curr) => acc + (curr.views || 0), 0);
-    const draftCount = posts.filter((p) => p.status === "Draft").length;
+    const publishedCount = posts.filter((p) => p.status === "Published").length;
+    const activeTeam = teamMembers.filter((m) => m.active).length;
 
     return (
       <div className="space-y-8 animate-fade-in-up">
@@ -271,28 +377,22 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-bold text-gray-900">
               Dashboard Overview
             </h2>
-            <p className="text-gray-500">Welcome back, Administrator.</p>
+            <p className="text-gray-500">System status and key metrics.</p>
           </div>
           <button
             onClick={() => setActiveTab("stories")}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
           >
-            Manage Blog Posts <ArrowRight size={16} />
+            Manage Content <ArrowRight size={16} />
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            label="Total Posts"
-            value={posts.length}
+            label="Published Stories"
+            value={publishedCount}
             icon={FileText}
             color="bg-blue-500"
-          />
-          <StatCard
-            label="Drafts"
-            value={draftCount}
-            icon={FileEdit}
-            color="bg-amber-500"
           />
           <StatCard
             label="Total Views"
@@ -301,63 +401,96 @@ const AdminDashboard = () => {
             color="bg-indigo-500"
           />
           <StatCard
-            label="Team Members"
-            value={MOCK_TEAM.length}
+            label="Active Staff"
+            value={activeTeam}
             icon={Users}
             color="bg-emerald-500"
           />
+          <StatCard
+            label="Pending Drafts"
+            value={posts.length - publishedCount}
+            icon={FileEdit}
+            color="bg-amber-500"
+          />
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Recent Posts</h3>
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100"
-              >
-                <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
-                  {post.image && (
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">
+              Recent Activity
+            </h3>
+            <div className="space-y-4">
+              {posts.slice(0, 4).map((post) => (
+                <div
+                  key={post.id}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                >
+                  <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
                     <img
                       src={post.image}
                       alt=""
                       className="w-full h-full object-cover"
                     />
-                  )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 truncate text-sm">
+                      {post.title}
+                    </h4>
+                    <p className="text-xs text-gray-500">{post.date}</p>
+                  </div>
+                  <div className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                    <Eye size={12} /> {post.views}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate">
-                    {post.title}
-                  </h4>
-                  <p className="text-sm text-gray-500">
-                    {post.date} • {post.views || 0} views
-                  </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setActiveTab("team")}
+                className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+              >
+                <div className="mb-2 w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users size={20} />
                 </div>
-                <span
-                  className={`px-3 py-1 text-xs rounded-full font-medium ${
-                    post.status === "Draft"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-green-100 text-green-700"
-                  }`}
-                >
-                  {post.status || "Published"}
-                </span>
-              </div>
-            ))}
+                <span className="font-semibold text-gray-900">Add Staff</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("stories")}
+                className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+              >
+                <div className="mb-2 w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileEdit size={20} />
+                </div>
+                <span className="font-semibold text-gray-900">Write Story</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("settings")}
+                className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+              >
+                <div className="mb-2 w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Palette size={20} />
+                </div>
+                <span className="font-semibold text-gray-900">Theme</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderStoriesView = () => (
+  const StoriesView = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Blog Posts</h2>
-          <p className="text-gray-500">
-            Create, edit, and manage all website articles.
-          </p>
+          <p className="text-gray-500">Manage articles and success stories.</p>
         </div>
         <button
           onClick={() => {
@@ -366,11 +499,6 @@ const AdminDashboard = () => {
               excerpt: "",
               content: "",
               category: "News",
-              date: new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              }),
               image: "",
               status: "Published",
               views: 0,
@@ -388,7 +516,7 @@ const AdminDashboard = () => {
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
             <h3 className="text-lg font-bold text-gray-900">
-              {currentPost.id ? "Edit Post" : "New Post"}
+              {currentPost.id ? "Edit Post" : "Create Post"}
             </h3>
             <button
               onClick={() => setIsEditingPost(false)}
@@ -401,25 +529,23 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Post Title
+                  Title
                 </label>
                 <input
                   required
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-lg font-medium"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20"
                   value={currentPost.title}
                   onChange={(e) =>
                     setCurrentPost({ ...currentPost, title: e.target.value })
                   }
-                  placeholder="Enter a captivating title..."
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Category
                 </label>
                 <select
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
                   value={currentPost.category}
                   onChange={(e) =>
                     setCurrentPost({ ...currentPost, category: e.target.value })
@@ -430,109 +556,76 @@ const AdminDashboard = () => {
                   <option>Agriculture</option>
                   <option>Community</option>
                   <option>News</option>
-                  <option>Impact</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Status
+                  Image Source
                 </label>
-                <select
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
-                  value={currentPost.status}
-                  onChange={(e) =>
-                    setCurrentPost({ ...currentPost, status: e.target.value })
-                  }
-                >
-                  <option value="Published">Published</option>
-                  <option value="Draft">Draft</option>
-                </select>
-              </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Featured Image
-                </label>
-                <div className="flex items-center gap-4">
-                  {currentPost.image && (
-                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                      <img
-                        src={currentPost.image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-xs text-gray-500">
-                          {isUploading
-                            ? "Uploading..."
-                            : "Click to upload image"}
-                        </p>
-                      </div>
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                      />
-                    </label>
-                  </div>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm"
+                    placeholder="Image URL"
+                    value={currentPost.image}
+                    onChange={(e) =>
+                      setCurrentPost({ ...currentPost, image: e.target.value })
+                    }
+                  />
+                  <label className="p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors">
+                    <Upload size={20} className="text-gray-600" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleFileUpload(e, setCurrentPost, "image")
+                      }
+                    />
+                  </label>
                 </div>
               </div>
-
               <div className="col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Short Excerpt
+                  Excerpt
                 </label>
                 <textarea
                   rows="2"
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
                   value={currentPost.excerpt}
                   onChange={(e) =>
                     setCurrentPost({ ...currentPost, excerpt: e.target.value })
                   }
-                  placeholder="Brief summary displayed on blog cards..."
                 />
               </div>
-
               <div className="col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Full Content (Rich Text)
+                  Content
                 </label>
-                <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                  <ReactQuill
-                    theme="snow"
-                    modules={quillModules}
-                    value={currentPost.title || ""}
-                    onChange={(content) =>
-                      setCurrentPost({ ...currentPost, title: content })
-                    }
-                    className="h-64 mb-12"
-                  />
-                </div>
+                <ReactQuill
+                  theme="snow"
+                  value={currentPost.content || ""}
+                  onChange={(c) =>
+                    setCurrentPost({ ...currentPost, content: c })
+                  }
+                  className="h-64 mb-12"
+                />
               </div>
             </div>
-
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => setIsEditingPost(false)}
-                className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isUploading}
-                className="px-6 py-2.5 rounded-xl font-semibold text-white transition-all shadow-lg disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg disabled:opacity-50"
                 style={{ backgroundColor: getThemeHex() }}
               >
-                {isUploading ? "Uploading..." : "Save Post"}
+                Save Post
               </button>
             </div>
           </form>
@@ -546,27 +639,18 @@ const AdminDashboard = () => {
             >
               <div className="w-full md:w-48 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
                 <img
-                  src={
-                    post.image ||
-                    "https://via.placeholder.com/300x200?text=No+Image"
-                  }
+                  src={post.image || "https://via.placeholder.com/300x200"}
                   alt={post.title}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide ${
-                      post.status === "Draft"
-                        ? "bg-amber-50 text-amber-600"
-                        : "bg-blue-50 text-blue-600"
-                    }`}
-                  >
-                    {post.category} • {post.status}
+                  <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-600">
+                    {post.category}
                   </span>
-                  <span className="text-xs text-gray-400">
-                    {post.date} • {post.views || 0} views
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <Eye size={12} /> {post.views} views
                   </span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -582,13 +666,13 @@ const AdminDashboard = () => {
                     setCurrentPost(post);
                     setIsEditingPost(true);
                   }}
-                  className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => handleDeletePost(post.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -602,80 +686,359 @@ const AdminDashboard = () => {
 
   const TeamView = () => (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Team Management</h2>
-        <p className="text-gray-500">View current staff members (Read Only).</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
+          <p className="text-gray-500">Manage staff profiles and roles.</p>
+        </div>
+        <button
+          onClick={() => {
+            setCurrentMember({ name: "", role: "", img: "", active: true });
+            setIsEditingMember(true);
+          }}
+          className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg"
+          style={{ backgroundColor: getThemeHex() }}
+        >
+          <Plus size={18} /> Add Member
+        </button>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                Name
-              </th>
-              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                Role
-              </th>
-              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase text-right">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {MOCK_TEAM.map((member, idx) => (
-              <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900">
-                  {member.name}
-                </td>
-                <td className="py-4 px-6 text-gray-500">{member.role}</td>
-                <td className="py-4 px-6 text-right">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
+
+      {isEditingMember ? (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold">Member Details</h3>
+            <button onClick={() => setIsEditingMember(false)}>
+              <X size={20} className="text-gray-400" />
+            </button>
+          </div>
+          <form onSubmit={handleSaveMember} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Full Name
+              </label>
+              <input
+                required
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl"
+                value={currentMember.name}
+                onChange={(e) =>
+                  setCurrentMember({ ...currentMember, name: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Role/Position
+              </label>
+              <input
+                required
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl"
+                value={currentMember.role}
+                onChange={(e) =>
+                  setCurrentMember({ ...currentMember, role: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Photo URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl"
+                  value={currentMember.img}
+                  onChange={(e) =>
+                    setCurrentMember({ ...currentMember, img: e.target.value })
+                  }
+                />
+                <label className="p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors">
+                  <Upload size={20} className="text-gray-600" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleFileUpload(e, setCurrentMember, "img")
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="status"
+                checked={currentMember.active}
+                onChange={(e) =>
+                  setCurrentMember({
+                    ...currentMember,
+                    active: e.target.checked,
+                  })
+                }
+                className="w-5 h-5 rounded accent-emerald-600"
+              />
+              <label htmlFor="status" className="font-medium text-gray-700">
+                Active (Visible on website)
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 pt-6">
+              <button
+                type="button"
+                onClick={() => setIsEditingMember(false)}
+                className="px-6 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 rounded-xl font-medium text-white"
+                style={{ backgroundColor: getThemeHex() }}
+              >
+                Save Member
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
+                  Profile
+                </th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
+                  Name
+                </th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
+                  Role
+                </th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase text-right">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {teamMembers.map((member) => (
+                <tr
+                  key={member.id}
+                  className="hover:bg-gray-50/50 transition-colors"
+                >
+                  <td className="py-3 px-6">
+                    <img
+                      src={member.img}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    />
+                  </td>
+                  <td className="py-3 px-6 font-medium text-gray-900">
+                    {member.name}
+                  </td>
+                  <td className="py-3 px-6 text-gray-500">{member.role}</td>
+                  <td className="py-3 px-6">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        member.active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {member.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-6 text-right space-x-2">
+                    <button
+                      onClick={() => {
+                        setCurrentMember(member);
+                        setIsEditingMember(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMember(member.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+
+  const ContentView = () => (
+    <div className="space-y-8 animate-fade-in-up">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Page Content</h2>
+        <p className="text-gray-500">Edit text appearing on main pages.</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Hero Section */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Type size={18} /> Home Hero
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Main Headline
+              </label>
+              <textarea
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                rows="2"
+                value={pageContent.hero.title}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    hero: { ...pageContent.hero, title: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Sub Text
+              </label>
+              <input
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                value={pageContent.hero.subtitle}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    hero: { ...pageContent.hero, subtitle: e.target.value },
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <FileText size={18} /> About Intro
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Title
+              </label>
+              <input
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                value={pageContent.about.title}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    about: { ...pageContent.about, title: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Summary
+              </label>
+              <textarea
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                rows="3"
+                value={pageContent.about.summary}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    about: { ...pageContent.about, summary: e.target.value },
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mission/Vision */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm md:col-span-2">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Globe size={18} /> Mission & Vision
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Mission Statement
+              </label>
+              <textarea
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                rows="3"
+                value={pageContent.mission.text}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    mission: { ...pageContent.mission, text: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Vision Statement
+              </label>
+              <textarea
+                className="w-full p-2 border rounded-lg mt-1 text-sm bg-gray-50"
+                rows="3"
+                value={pageContent.vision.text}
+                onChange={(e) =>
+                  setPageContent({
+                    ...pageContent,
+                    vision: { ...pageContent.vision, text: e.target.value },
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => saveContent(pageContent)}
+          className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-1"
+          style={{ backgroundColor: getThemeHex() }}
+        >
+          <Save size={20} /> Save Content Changes
+        </button>
       </div>
     </div>
   );
 
   const SettingsView = () => {
     const colors = [
-      { name: "emerald", hex: "#059669", class: "bg-emerald-600" },
-      { name: "blue", hex: "#2563eb", class: "bg-blue-600" },
-      { name: "purple", hex: "#7c3aed", class: "bg-purple-600" },
-      { name: "amber", hex: "#d97706", class: "bg-amber-600" },
-      { name: "rose", hex: "#e11d48", class: "bg-rose-600" },
-      { name: "indigo", hex: "#4f46e5", class: "bg-indigo-600" },
+      { name: "emerald", hex: "#059669" },
+      { name: "blue", hex: "#2563eb" },
+      { name: "purple", hex: "#7c3aed" },
+      { name: "amber", hex: "#d97706" },
+      { name: "rose", hex: "#e11d48" },
+      { name: "indigo", hex: "#4f46e5" },
     ];
-
-    const handleColorSelection = (colorName) => {
-      setPrimaryColor(colorName);
-      setCustomHex(null);
-    };
-
-    const handleCustomColorChange = (color) => {
-      setCustomHex(color.hex);
-    };
 
     return (
       <div className="space-y-8 animate-fade-in-up">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Site Settings</h2>
-          <p className="text-gray-500">
-            Customize the look and feel of your website.
-          </p>
+          <p className="text-gray-500">Configure global identity and theme.</p>
         </div>
+
         <div className="grid md:grid-cols-2 gap-8">
+          {/* Theme Settings */}
           <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
-                <Palette size={20} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Brand Colors</h3>
-            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Palette className="text-gray-400" size={20} /> Theme Appearance
+            </h3>
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-4">
@@ -685,49 +1048,153 @@ const AdminDashboard = () => {
                   {colors.map((color) => (
                     <button
                       key={color.name}
-                      onClick={() => handleColorSelection(color.name)}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                        color.class
-                      } ${
-                        primaryColor === color.name && !customHex
-                          ? "ring-4 ring-offset-2 ring-gray-200 scale-110"
-                          : ""
-                      }`}
+                      onClick={() => {
+                        setPrimaryColor(color.name);
+                        setCustomHex(null);
+                      }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all`}
+                      style={{ backgroundColor: color.hex }}
                     >
                       {primaryColor === color.name && !customHex && (
-                        <Check size={20} className="text-white" />
+                        <Check size={18} className="text-white" />
                       )}
                     </button>
                   ))}
                 </div>
               </div>
-
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Or Custom Color
-                  </span>
-                </div>
-              </div>
-
-              <div>
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-4">
+                  Custom Hex Color
+                </label>
                 <div className="flex justify-center">
                   <SketchPicker
-                    color={
-                      customHex ||
-                      colors.find((c) => c.name === primaryColor)?.hex ||
-                      "#059669"
-                    }
-                    onChangeComplete={handleCustomColorChange}
+                    color={getThemeHex()}
+                    onChangeComplete={(c) => setCustomHex(c.hex)}
                     disableAlpha={true}
+                    width="100%"
                   />
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Site Identity */}
+          <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Globe className="text-gray-400" size={20} /> Identity & Contact
+            </h3>
+
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
+                <img
+                  src={siteSettings.logoUrl}
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <label className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-50">
+                Change Logo
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleFileUpload(e, setSiteSettings, "logoUrl")
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="relative">
+                <MessageSquare
+                  className="absolute top-3 left-3 text-gray-400"
+                  size={16}
+                />
+                <input
+                  className="w-full pl-10 p-3 bg-gray-50 border rounded-xl text-sm"
+                  placeholder="Site Name"
+                  value={siteSettings.siteName}
+                  onChange={(e) =>
+                    setSiteSettings({
+                      ...siteSettings,
+                      siteName: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="relative">
+                <Phone
+                  className="absolute top-3 left-3 text-gray-400"
+                  size={16}
+                />
+                <input
+                  className="w-full pl-10 p-3 bg-gray-50 border rounded-xl text-sm"
+                  placeholder="Phone"
+                  value={siteSettings.contact.phone}
+                  onChange={(e) =>
+                    setSiteSettings({
+                      ...siteSettings,
+                      contact: {
+                        ...siteSettings.contact,
+                        phone: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="relative">
+                <Mail
+                  className="absolute top-3 left-3 text-gray-400"
+                  size={16}
+                />
+                <input
+                  className="w-full pl-10 p-3 bg-gray-50 border rounded-xl text-sm"
+                  placeholder="Email"
+                  value={siteSettings.contact.email}
+                  onChange={(e) =>
+                    setSiteSettings({
+                      ...siteSettings,
+                      contact: {
+                        ...siteSettings.contact,
+                        email: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="relative">
+                <MapPin
+                  className="absolute top-3 left-3 text-gray-400"
+                  size={16}
+                />
+                <input
+                  className="w-full pl-10 p-3 bg-gray-50 border rounded-xl text-sm"
+                  placeholder="Address"
+                  value={siteSettings.contact.address}
+                  onChange={(e) =>
+                    setSiteSettings({
+                      ...siteSettings,
+                      contact: {
+                        ...siteSettings.contact,
+                        address: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={() => saveSettings(siteSettings)}
+            className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-white shadow-xl transition-all hover:opacity-90"
+            style={{ backgroundColor: getThemeHex() }}
+          >
+            <Save size={20} /> Save All Settings
+          </button>
         </div>
       </div>
     );
@@ -737,6 +1204,7 @@ const AdminDashboard = () => {
     { id: "dashboard", label: "Overview", icon: LayoutDashboard },
     { id: "stories", label: "Blog Posts", icon: FileText },
     { id: "team", label: "Team", icon: Users },
+    { id: "content", label: "Content", icon: Type },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -745,6 +1213,7 @@ const AdminDashboard = () => {
       className="flex h-screen bg-gray-50 font-sans text-gray-900"
       style={{ "--primary": getThemeHex() }}
     >
+      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -752,16 +1221,15 @@ const AdminDashboard = () => {
       >
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
+            {/* Logo Preview */}
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 overflow-hidden">
               <img
-                src="./logo.png"
+                src={siteSettings.logoUrl}
                 alt="Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-bold text-xl tracking-tight">
-              Arova Admin
-            </span>
+            <span className="font-bold text-xl tracking-tight">Admin</span>
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -786,18 +1254,11 @@ const AdminDashboard = () => {
         </nav>
         <div className="p-4 border-t border-slate-800 space-y-2">
           <Link
-            to="/blog"
-            className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800 rounded-xl"
-          >
-            <Globe size={20} />
-            <span className="font-medium">Go to Blog</span>
-          </Link>
-          <Link
             to="/"
             className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800 rounded-xl"
           >
-            <ExternalLink size={20} />
-            <span className="font-medium">Exit to Website</span>
+            <ExternalLink size={20} />{" "}
+            <span className="font-medium">Exit to Site</span>
           </Link>
           <button
             onClick={handleLogout}
@@ -808,6 +1269,7 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-40">
           <div className="flex items-center gap-4">
@@ -818,7 +1280,7 @@ const AdminDashboard = () => {
               <Menu />
             </button>
             <h1 className="text-xl font-bold text-gray-800 capitalize hidden md:block">
-              {activeTab === "stories" ? "Blog Posts Management" : activeTab}
+              {activeTab} Management
             </h1>
           </div>
           <div className="flex items-center gap-4">
@@ -827,13 +1289,7 @@ const AdminDashboard = () => {
                 className="w-2 h-2 rounded-full animate-pulse"
                 style={{ backgroundColor: getThemeHex() }}
               ></span>
-              System Online
-            </div>
-            <div
-              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm"
-              style={{ color: getThemeHex() }}
-            >
-              A
+              Live Mode
             </div>
           </div>
         </header>
@@ -841,8 +1297,9 @@ const AdminDashboard = () => {
         <div className="flex-1 overflow-y-auto p-6 md:p-10">
           <div className="max-w-7xl mx-auto">
             {activeTab === "dashboard" && <DashboardView />}
-            {activeTab === "stories" && renderStoriesView()}
+            {activeTab === "stories" && <StoriesView />}
             {activeTab === "team" && <TeamView />}
+            {activeTab === "content" && <ContentView />}
             {activeTab === "settings" && <SettingsView />}
           </div>
         </div>

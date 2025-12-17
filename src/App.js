@@ -1175,6 +1175,7 @@ const ArovaContent = () => {
                 Empowering communities through agricultural value addition and
                 financial services since 2008.
               </p>
+
               <div className="flex gap-4">
                 {[
                   { Icon: FaFacebookF, link: "https://www.facebook.com" },
@@ -1286,7 +1287,6 @@ const ArovaContent = () => {
           </div>
         </footer>
       )}
-      ;)}
     </div>
   );
 };

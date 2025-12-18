@@ -29,7 +29,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { SketchPicker } from "react-color";
-import { ThemeContext } from "./ThemeContext";
+import { ThemeContext } from "../ThemeContext";
 
 /**
  * DEFAULT DATA CONSTANTS

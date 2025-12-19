@@ -11,14 +11,7 @@ import { adjustColor } from "../ThemeContext";
 import RevealOnScroll from "../components/RevealOnScroll";
 
 const HomePage = ({ blogPosts, navigate }) => {
-  const {
-    resolvedHex,
-    primaryColor,
-    customHex,
-    getThemeClass,
-    setPrimaryColor,
-    setCustomHex,
-  } = useContext(ThemeContext);
+  const { resolvedHex, primaryColor } = useContext(ThemeContext);
 
   return (
     <div className="overflow-x-hidden">

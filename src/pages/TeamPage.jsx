@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import { teamData, executivesData } from "../data/siteData";
 import RevealOnScroll from "../components/RevealOnScroll";
-import { adjustColor } from "../ThemeContext";
+
 
 const TeamPage = () => {
   const { resolvedHex: primaryColor } = useContext(ThemeContext);

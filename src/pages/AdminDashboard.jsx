@@ -9,7 +9,6 @@ import {
   X,
   Trash2,
   Edit2,
-  Palette,
   Check,
   Menu,
   Eye,
@@ -17,12 +16,7 @@ import {
   ArrowRight,
   Upload,
   ExternalLink,
-  Globe,
   Save,
-  MessageSquare,
-  Phone,
-  MapPin,
-  Mail,
   Type,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";

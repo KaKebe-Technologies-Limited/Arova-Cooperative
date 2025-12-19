@@ -1,11 +1,11 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import { teamData, executivesData } from "../data/siteData";
 import RevealOnScroll from "../components/RevealOnScroll";
+import { adjustColor } from "../ThemeContext";
 
 const TeamPage = () => {
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex: primaryColor } = useContext(ThemeContext);
 
   return (
     <div className="py-20 bg-gray-50 min-h-screen">

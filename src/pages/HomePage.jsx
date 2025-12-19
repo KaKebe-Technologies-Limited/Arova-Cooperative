@@ -1,4 +1,3 @@
-import { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import BiographySection from "../sections/BiographySection";
 import FoundersMessage from "../sections/FoundersMessage";
@@ -6,12 +5,20 @@ import TestimonialsSection from "../sections/TestimonialsSection";
 import { statsData, coreValuesData } from "../data/siteData";
 import AnimatedCounter from "../components/AnimatedCounter";
 import { ArrowRight, Target, Heart, Lock, Calendar } from "lucide-react";
+import { useContext } from "react";
+import { adjustColor } from "../ThemeContext";
 
 import RevealOnScroll from "../components/RevealOnScroll";
 
 const HomePage = ({ blogPosts, navigate }) => {
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const {
+    resolvedHex,
+    primaryColor,
+    customHex,
+    getThemeClass,
+    setPrimaryColor,
+    setCustomHex,
+  } = useContext(ThemeContext);
 
   return (
     <div className="overflow-x-hidden">
@@ -28,13 +35,13 @@ const HomePage = ({ blogPosts, navigate }) => {
           <RevealOnScroll>
             <div
               style={{
-                borderColor: `${primaryColor}60`,
-                backgroundColor: `${primaryColor}30`,
+                borderColor: `${resolvedHex}60`, // e.g., #10b98160
+                backgroundColor: `${resolvedHex}30`,
               }}
               className="inline-block mb-6 px-6 py-2 rounded-full border backdrop-blur-md"
             >
               <p
-                style={{ color: "#6ee7b7" }}
+                style={{ color: adjustColor(resolvedHex, 50) }}
                 className="font-medium tracking-wide uppercase text-sm"
               >
                 Established 2008 • Reg No: 12064/RCS
@@ -44,19 +51,15 @@ const HomePage = ({ blogPosts, navigate }) => {
           <RevealOnScroll delay={200}>
             <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
               Let's Change The World <br />
-              <span style={{ color: customHex || "#34d399" }}>
-                With Humanity
-              </span>
+              <span style={{ color: resolvedHex }}>With Humanity</span>
             </h1>
           </RevealOnScroll>
           <RevealOnScroll delay={600}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => navigate("/about")}
-                style={{ backgroundColor: primaryColor }}
-                className={`px-8 py-4 text-white rounded-full font-semibold text-lg shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 ${
-                  customHex ? "bg-emerald-600 hover:bg-emerald-700" : ""
-                }`}
+                style={{ backgroundColor: resolvedHex }}
+                className="px-8 py-4 text-white rounded-full font-semibold text-lg shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 Learn More <ArrowRight size={20} />
               </button>
@@ -84,8 +87,8 @@ const HomePage = ({ blogPosts, navigate }) => {
                   <div className="text-center group p-6 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
                     <div
                       style={{
-                        color: primaryColor,
-                        backgroundColor: `${primaryColor}20`,
+                        color: resolvedHex,
+                        backgroundColor: `${resolvedHex}10`,
                       }}
                       className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md"
                     >
@@ -114,8 +117,9 @@ const HomePage = ({ blogPosts, navigate }) => {
       <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-8">
+            {/* Vision */}
             <RevealOnScroll>
-              <div className="bg-gray-50 p-10 rounded-3xl shadow-xl border border-gray-100 h-full hover:-translate-y-2 transition-transform duration-300">
+              <div className="bg-gray-50 p-10 rounded-3xl border border-gray-100 h-full hover:-translate-y-2 transition-transform duration-300">
                 <div
                   style={{
                     color: primaryColor,
@@ -125,40 +129,54 @@ const HomePage = ({ blogPosts, navigate }) => {
                 >
                   <Target size={32} />
                 </div>
+
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
                   Our Vision
                 </h3>
+
                 <p className="text-gray-600 leading-relaxed">
                   To be a leading producer of agricultural products nationally
                   and internationally.
                 </p>
               </div>
             </RevealOnScroll>
+
+            {/* Mission */}
             <RevealOnScroll delay={200}>
               <div
-                style={{ backgroundColor: primaryColor }}
-                className={`p-10 rounded-3xl shadow-xl h-full text-white transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300 ${
-                  customHex ? "bg-emerald-600" : ""
-                }`}
+                style={{ backgroundColor: resolvedHex }}
+                className="p-10 rounded-3xl h-full text-white transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300"
               >
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6 text-white">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6">
                   <Heart size={32} />
                 </div>
+
                 <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
-                <p className="text-emerald-50 leading-relaxed">
+
+                <p className="leading-relaxed text-white/90">
                   Eradicating poverty among members through value addition on
                   agricultural products, providing low interest loans.
                 </p>
               </div>
             </RevealOnScroll>
+
+            {/* Core Values */}
             <RevealOnScroll delay={400}>
-              <div className="bg-gray-50 p-10 rounded-3xl shadow-xl border border-gray-100 h-full hover:-translate-y-2 transition-transform duration-300">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 text-blue-600">
+              <div className="bg-gray-50 p-10 rounded-3xl border border-gray-100 h-full hover:-translate-y-2 transition-transform duration-300">
+                <div
+                  style={{
+                    color: primaryColor,
+                    backgroundColor: `${primaryColor}20`,
+                  }}
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+                >
                   <Lock size={32} />
                 </div>
+
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
                   Core Values
                 </h3>
+
                 <ul className="text-gray-600 space-y-2">
                   {coreValuesData.slice(0, 4).map((v) => (
                     <li key={v} className="flex items-center gap-2">
@@ -201,10 +219,8 @@ const HomePage = ({ blogPosts, navigate }) => {
                     />
                     <div className="absolute top-4 left-4 z-20">
                       <span
-                        style={{ backgroundColor: primaryColor }}
-                        className={`px-3 py-1 text-white rounded-md text-xs font-bold uppercase tracking-wide ${
-                          customHex ? "bg-emerald-600" : ""
-                        }`}
+                        style={{ backgroundColor: resolvedHex }}
+                        className="px-3 py-1 text-white rounded-md text-xs font-bold uppercase tracking-wide"
                       >
                         {post.category || "News"}
                       </span>
@@ -214,7 +230,9 @@ const HomePage = ({ blogPosts, navigate }) => {
                     <div className="flex items-center text-gray-400 text-sm mb-3 space-x-2">
                       <Calendar size={14} /> <span>{post.date}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors">
+                    <h3
+                      className={`text-xl font-bold text-gray-900 mb-3 group-hover:text-[${resolvedHex}] transition-colors`}
+                    >
                       {post.title}
                     </h3>
                     <p className="text-gray-600 mb-4 line-clamp-3 text-sm flex-grow">

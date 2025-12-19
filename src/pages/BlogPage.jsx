@@ -1,10 +1,10 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import RevealOnScroll from "../components/RevealOnScroll";
+import { adjustColor } from "../ThemeContext";
 
 const BlogPage = ({ blogPosts }) => {
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex: primaryColor } = useContext(ThemeContext);
   return (
     <div className="py-20 bg-white min-h-screen">
       <div className="max-w-7xl mx-auto px-6">

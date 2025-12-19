@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 
-export const ThemeContext = createContext();
-
+// Helper to darken/lighten hex colors for hover states
 const adjustColor = (color, amount) => {
   return (
     "#" +
@@ -16,7 +15,9 @@ const adjustColor = (color, amount) => {
   );
 };
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeContext = createContext();
+
+const ThemeProvider = ({ children }) => {
   const [primaryColor, setPrimaryColor] = useState(() => {
     return localStorage.getItem("arova_theme_color") || "emerald";
   });
@@ -43,13 +44,18 @@ export const ThemeProvider = ({ children }) => {
     return `${type}-${primaryColor}-${weight}`;
   };
 
-  const themeStyle = customHex
-    ? {
-        "--primary": customHex,
-        "--primary-light": `${customHex}20`,
-        "--primary-hover": adjustColor(customHex, -20),
-      }
-    : {};
+  const getResolvedHex = () => {
+    if (customHex) return customHex;
+    const colorMap = {
+      emerald: "#10b981",
+      blue: "#3b82f6",
+      indigo: "#6366f1",
+      purple: "#8b5cf6",
+      rose: "#f43f5e",
+      amber: "#f59e0b",
+    };
+    return colorMap[primaryColor] || "#10b981";
+  };
 
   return (
     <ThemeContext.Provider
@@ -59,10 +65,14 @@ export const ThemeProvider = ({ children }) => {
         customHex,
         setCustomHex,
         getThemeClass,
-        themeStyle,
+        resolvedHex: getResolvedHex(),
+        adjustColor, // Added for easy access in components
       }}
     >
-      <div style={themeStyle}>{children}</div>
+      {children}
     </ThemeContext.Provider>
   );
 };
+
+// Only one export block — no duplicates
+export { ThemeProvider, adjustColor };

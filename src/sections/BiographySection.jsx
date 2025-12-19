@@ -1,11 +1,10 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import { Link, ArrowRight } from "lucide-react";
 import RevealOnScroll from "../components/RevealOnScroll";
 
 const BiographySection = () => {
-  const { customHex, getThemeClass } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex, getThemeClass, primaryColor } = useContext(ThemeContext);
 
   return (
     <div className="py-24 bg-white overflow-hidden relative z-20 -mt-10 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
@@ -35,14 +34,16 @@ const BiographySection = () => {
             <div>
               <div
                 className={`inline-block px-4 py-1 rounded-full text-sm font-bold mb-4 ${
-                  !customHex
+                  !resolvedHex
                     ? `${getThemeClass("bg", "100")} ${getThemeClass(
                         "text",
                         "600"
                       )}`
                     : ""
                 }`}
-                style={customHex ? { backgroundColor: `${customHex}20` } : {}}
+                style={
+                  resolvedHex ? { backgroundColor: `${resolvedHex}20` } : {}
+                }
               >
                 Who We Are
               </div>
@@ -65,7 +66,7 @@ const BiographySection = () => {
                 <button
                   style={{ backgroundColor: primaryColor }}
                   className={`text-white px-8 py-4 rounded-full font-bold shadow-lg hover:opacity-90 transition-all flex items-center gap-2 ${
-                    !customHex ? getThemeClass("bg", "600") : ""
+                    !resolvedHex ? getThemeClass("bg", "600") : ""
                   }`}
                 >
                   Read Full Story <ArrowRight size={20} />

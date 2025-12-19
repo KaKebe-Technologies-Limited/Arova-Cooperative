@@ -1,12 +1,12 @@
-import { MapPin, Mail, Phone } from "lucide-react";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
-
+import { MapPin, Mail, Phone } from "lucide-react";
 import RevealOnScroll from "../components/RevealOnScroll";
+import { adjustColor } from "../ThemeContext";
 
 const ContactPage = () => {
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex: primaryColor } = useContext(ThemeContext);
+
   return (
     <div className="py-20 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-6">
@@ -29,7 +29,10 @@ const ContactPage = () => {
                   <div className="flex items-start gap-4">
                     <MapPin className="shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-emerald-100 text-sm uppercase">
+                      <p
+                        className="font-semibold text-sm uppercase"
+                        style={{ color: adjustColor(primaryColor, 100) }}
+                      >
                         Address
                       </p>
                       <p>Senior Quarters B Cell, Lira City</p>
@@ -38,7 +41,10 @@ const ContactPage = () => {
                   <div className="flex items-start gap-4">
                     <Mail className="shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-emerald-100 text-sm uppercase">
+                      <p
+                        className="font-semibold text-sm uppercase"
+                        style={{ color: adjustColor(primaryColor, 100) }}
+                      >
                         Email
                       </p>
                       <p>info@arova.org</p>
@@ -47,7 +53,10 @@ const ContactPage = () => {
                   <div className="flex items-start gap-4">
                     <Phone className="shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-emerald-100 text-sm uppercase">
+                      <p
+                        className="font-semibold text-sm uppercase"
+                        style={{ color: adjustColor(primaryColor, 100) }}
+                      >
                         Phone
                       </p>
                       <p>+256 700 000 000</p>

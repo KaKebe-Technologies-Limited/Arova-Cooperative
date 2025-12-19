@@ -36,8 +36,8 @@ const ArovaContent = () => {
   const [blogPosts, setBlogPosts] = useState([]);
 
   const navigate = useNavigate();
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex } = useContext(ThemeContext);
+  const primaryColor = resolvedHex;
 
   // -----------------------------
   // BLOG POSTS BOOTSTRAP
@@ -133,7 +133,7 @@ const ArovaContent = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route
             path="/admin"
-            element={isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
+            element={isAdmin ? <AdminDashboard setIsAdmin={setIsAdmin} /> : <Navigate to="/" />}
           />
         </Routes>
       </div>

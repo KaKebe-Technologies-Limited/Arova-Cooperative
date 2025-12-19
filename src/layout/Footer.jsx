@@ -11,9 +11,7 @@ import { ThemeContext } from "../ThemeContext";
 
 const Footer = () => {
   const location = useLocation();
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
-
+  const { primaryColor } = useContext(ThemeContext);
   // ❌ Hide footer in admin
   if (location.pathname.startsWith("/admin")) return null;
 

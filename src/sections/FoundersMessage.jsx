@@ -1,11 +1,10 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import RevealOnScroll from "../components/RevealOnScroll";
 import { Quote } from "lucide-react";
 
 const FoundersMessage = () => {
-  const { customHex } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex: primaryColor } = useContext(ThemeContext);
 
   return (
     <div className="py-24 bg-emerald-50/40">

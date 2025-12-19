@@ -1,12 +1,11 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import { Quote } from "lucide-react";
 import { testimonialsData } from "../data/siteData";
 import RevealOnScroll from "../components/RevealOnScroll";
 
 const TestimonialsSection = () => {
-  const { customHex, getThemeClass } = useContext(ThemeContext);
-  const primaryColor = customHex || "#059669";
+  const { resolvedHex, getThemeClass, primaryColor } = useContext(ThemeContext);
 
   return (
     <div className="py-24 bg-white">
@@ -19,7 +18,7 @@ const TestimonialsSection = () => {
             <div
               style={{ color: primaryColor }}
               className={`text-sm font-bold uppercase tracking-wider mb-2 ${
-                !customHex ? getThemeClass("text", "600") : ""
+                !resolvedHex ? getThemeClass("text", "600") : ""
               }`}
             >
               Testimonials

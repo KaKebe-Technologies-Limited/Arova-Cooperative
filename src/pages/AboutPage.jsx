@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
 import RevealOnScroll from "../components/RevealOnScroll";
-import { adjustColor } from "../ThemeContext";
 
 const AboutPage = () => {
   const { resolvedHex: primaryColor } = useContext(ThemeContext);

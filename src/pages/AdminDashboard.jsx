@@ -1,29 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 import React, { useState, useEffect, useContext } from "react";
 import {
-  LayoutDashboard,
   FileText,
   Users,
-  Settings,
-  LogOut,
   Plus,
   X,
   Trash2,
   Edit2,
-  Check,
-  Menu,
-  Eye,
-  FileEdit,
-  ArrowRight,
   Upload,
   ExternalLink,
-  Save,
-  Type,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { SketchPicker } from "react-color";
 import { ThemeContext } from "../ThemeContext";
 import { useRef } from "react";
 
@@ -147,13 +136,12 @@ const quillFormats = [
 ];
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const { resolvedHex: currentThemeHex } = useContext(ThemeContext);
 
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab] = useState("dashboard");
   const [posts, setPosts] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
+  const [setSiteSettings] = useState(DEFAULT_SETTINGS);
   const [pageContent, setPageContent] = useState(DEFAULT_CONTENT);
 
   const [currentPost, setCurrentPost] = useState({
@@ -212,34 +200,37 @@ const AdminDashboard = () => {
       savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS
     );
     setPageContent(savedContent ? JSON.parse(savedContent) : DEFAULT_CONTENT);
-  }, []);
+  }, [setSiteSettings]);
 
   // File upload (base64)
   const handleFileUpload = async (file) => {
-  setIsUploading(true); // This shows "uploading..." like a spinning wheel.
-  try {
-    const formData = new FormData(); // This is a bag to hold your picture.
-    formData.append('file', file); // Put the picture in the bag.
-    formData.append('upload_preset', process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET); // Add your secret rule book name.
+    setIsUploading(true); // This shows "uploading..." like a spinning wheel.
+    try {
+      const formData = new FormData(); // This is a bag to hold your picture.
+      formData.append("file", file); // Put the picture in the bag.
+      formData.append(
+        "upload_preset",
+        process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
+      ); // Add your secret rule book name.
 
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
-    );
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-    const imageUrl = response.data.secure_url; // This is the magic web address for your picture!
-    setIsUploading(false); // Stop the spinning.
-    return imageUrl; // Give back the address.
-  } catch (error) {
-    console.error('Oops, something went wrong:', error); // Say "uh oh" if there's a mistake.
-    setIsUploading(false);
-    alert('Picture didn\'t go up. Try again!')
-    return null; // No address if it failed.
-  }
-};
+      const imageUrl = response.data.secure_url; // This is the magic web address for your picture!
+      setIsUploading(false); // Stop the spinning.
+      return imageUrl; // Give back the address.
+    } catch (error) {
+      console.error("Oops, something went wrong:", error); // Say "uh oh" if there's a mistake.
+      setIsUploading(false);
+      alert("Picture didn't go up. Try again!");
+      return null; // No address if it failed.
+    }
+  };
 
   // Quill image handler
   const handleQuillImage = () => {
@@ -303,19 +294,16 @@ const AdminDashboard = () => {
   };
 
   // Team handlers
-  const handleSaveMember = () => {
-    let updatedTeam;
-    if (isEditingMember && currentMember.id) {
-      updatedTeam = teamMembers.map((m) =>
-        m.id === currentMember.id ? currentMember : m
-      );
-    } else {
-      updatedTeam = [...teamMembers, { ...currentMember, id: Date.now() }];
+  const handleSaveMember = async (member) => {
+    let imageUrl = member.img; // Use old picture if no new one.
+    if (member.newImage) {
+      // If there's a new picture file...
+      imageUrl = await handleFileUpload(member.newImage); // Upload it!
+      if (!imageUrl) return; // Stop if upload failed.
     }
-    setTeamMembers(updatedTeam);
-    localStorage.setItem("arova_team", JSON.stringify(updatedTeam));
-    setCurrentMember({ name: "", role: "", img: "", active: true });
-    setIsEditingMember(false);
+
+    // const updatedMember = { ...member, img: imageUrl }; // Save with the cloud link.
+    // Now do the rest, like update your list and save to localStorage.
   };
 
   const handleDeleteMember = (id) => {
@@ -326,10 +314,6 @@ const AdminDashboard = () => {
 
   const saveContent = () => {
     localStorage.setItem("arova_page_content", JSON.stringify(pageContent));
-  };
-
-  const saveSettings = () => {
-    localStorage.setItem("arova_settings", JSON.stringify(siteSettings));
   };
 
   // Dashboard View

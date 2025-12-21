@@ -9,91 +9,154 @@ const ContactPage = () => {
 
   return (
     <div className="py-20 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <RevealOnScroll>
-          <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold text-gray-900">Get In Touch</h1>
+          <div className="text-center mb-20">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Get In Touch
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We'd love to hear from you. Whether you have a question, want to
+              partner with us, or just say hello — reach out!
+            </p>
           </div>
         </RevealOnScroll>
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="col-span-1 space-y-8">
-            <RevealOnScroll>
-              <div
-                style={{ backgroundColor: primaryColor }}
-                className="p-8 rounded-2xl text-white shadow-lg"
-              >
-                <h3 className="text-xl font-bold mb-6 border-b border-white/30 pb-4">
-                  Contact Info
-                </h3>
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <MapPin className="shrink-0 mt-1" />
+
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Contact Info Card */}
+          <RevealOnScroll delay={100}>
+            <div
+              style={{ backgroundColor: primaryColor }}
+              className="p-10 rounded-3xl text-white shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-white/20 -translate-x-32 -translate-y-32"></div>
+                <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-white/10 translate-x-40 translate-y-40"></div>
+              </div>
+
+              <div className="relative z-10">
+                <h2 className="text-3xl font-bold mb-8">Contact Information</h2>
+                <div className="space-y-8">
+                  <div className="flex items-start gap-5">
+                    <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                      <MapPin size={28} />
+                    </div>
                     <div>
-                      <p
-                        className="font-semibold text-sm uppercase"
-                        style={{ color: adjustColor(primaryColor, 100) }}
-                      >
+                      <p className="font-semibold text-lg mb-1 opacity-90">
                         Address
                       </p>
-                      <p>Senior Quarters B Cell, Lira City</p>
+                      <p className="text-lg leading-relaxed">
+                        Senior Quarters B Cell
+                        <br />
+                        Lira City, Uganda
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <Mail className="shrink-0 mt-1" />
+
+                  <div className="flex items-start gap-5">
+                    <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                      <Mail size={28} />
+                    </div>
                     <div>
-                      <p
-                        className="font-semibold text-sm uppercase"
-                        style={{ color: adjustColor(primaryColor, 100) }}
-                      >
+                      <p className="font-semibold text-lg mb-1 opacity-90">
                         Email
                       </p>
-                      <p>info@arova.org</p>
+                      <p className="text-lg">info@arova.org</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <Phone className="shrink-0 mt-1" />
+
+                  <div className="flex items-start gap-5">
+                    <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                      <Phone size={28} />
+                    </div>
                     <div>
-                      <p
-                        className="font-semibold text-sm uppercase"
-                        style={{ color: adjustColor(primaryColor, 100) }}
-                      >
+                      <p className="font-semibold text-lg mb-1 opacity-90">
                         Phone
                       </p>
-                      <p>+256 700 000 000</p>
+                      <p className="text-lg">+256 700 000 000</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </RevealOnScroll>
-          </div>
-          <div className="col-span-2">
-            <div className="bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
-              <h3 className="text-2xl font-bold mb-6">Send us a message</h3>
-              <form className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+            </div>
+          </RevealOnScroll>
+
+          {/* Contact Form */}
+          <RevealOnScroll delay={200}>
+            <div className="bg-white p-10 md:p-12 rounded-3xl shadow-2xl border border-gray-100">
+              <h2 className="text-3xl font-bold mb-8 text-gray-900">
+                Send us a message
+              </h2>
+
+              <form className="space-y-7">
+                <div className="grid md:grid-cols-2 gap-7">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-transparent focus:ring-4"
+                      style={{ ringColor: `${primaryColor}40` }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="john@example.com"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-transparent focus:ring-4"
+                      style={{ ringColor: `${primaryColor}40` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Subject
+                  </label>
                   <input
-                    className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 outline-none"
-                    placeholder="Name"
-                  />
-                  <input
-                    className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 outline-none"
-                    placeholder="Email"
+                    type="text"
+                    placeholder="How can we help you?"
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-transparent focus:ring-4"
+                    style={{ ringColor: `${primaryColor}40` }}
                   />
                 </div>
-                <textarea
-                  rows="5"
-                  className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 outline-none"
-                  placeholder="Message"
-                ></textarea>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    rows="6"
+                    placeholder="Tell us more about your inquiry..."
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:border-transparent focus:ring-4"
+                    style={{ ringColor: `${primaryColor}40` }}
+                  ></textarea>
+                </div>
+
                 <button
+                  type="submit"
                   style={{ backgroundColor: primaryColor }}
-                  className="w-full py-4 text-white font-bold rounded-xl shadow-lg"
+                  className="w-full py-5 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = adjustColor(
+                      primaryColor,
+                      -40
+                    ))
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = primaryColor)
+                  }
                 >
                   Send Message
                 </button>
               </form>
             </div>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </div>

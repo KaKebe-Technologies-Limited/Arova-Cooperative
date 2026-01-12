@@ -49,48 +49,54 @@ const ArovaContent = () => {
         title: "From 15 Women to 19,000+ Members",
         excerpt: "How a small savings group transformed the region.",
         date: "Dec 14, 2024",
-        image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
+        image: "/images/blog 1.jpg",
         category: "Success Story",
+        status: "Published",
       },
       {
         id: 2,
         title: "Breaking the Poverty Cycle",
         excerpt: "Low interest loans are changing lives.",
         date: "Nov 20, 2024",
-        image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a",
+        image: "/images/blog 2.jpg",
         category: "Finance",
+        status: "Published",
       },
       {
         id: 3,
         title: "Revolutionizing Agriculture via Value Addition",
         excerpt: "Helping farmers earn more through processing.",
         date: "Oct 15, 2024",
-        image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449",
+        image: "/images/blog 4.webp",
         category: "Agriculture",
+        status: "Published",
       },
       {
         id: 4,
         title: "The Power of a Shared Dream",
         excerpt: "It started with 15 women.",
         date: "Sep 08, 2024",
-        image: "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8",
+        image: "/images/blog 5.jpg",
         category: "Community",
+        status: "Published",
       },
       {
         id: 5,
         title: "Serving the Lango & Acholi Sub-regions",
         excerpt: "Expanding across Northern Uganda.",
         date: "Aug 22, 2024",
-        image: "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4",
+        image: "/images/blog 3.jpg",
         category: "Impact",
+        status: "Published",
       },
       {
         id: 6,
         title: "Funding Our Future: 2B UGX",
         excerpt: "Strategic funding accelerating impact.",
         date: "Jul 15, 2024",
-        image: "https://images.unsplash.com/photo-1579621970795-87facc2f976d",
+        image: "/images/blog 6.jpg",
         category: "Finance",
+        status: "Published",
       },
     ];
 
@@ -104,6 +110,7 @@ const ArovaContent = () => {
   const handleAdminLogin = () => {
     if (adminPassword === "arova2024") {
       setIsAdmin(true);
+      localStorage.setItem("isAuthenticated", "true");
       setShowAdminLogin(false);
       navigate("/admin");
     } else {
@@ -133,7 +140,13 @@ const ArovaContent = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route
             path="/admin"
-            element={isAdmin ? <AdminDashboard setIsAdmin={setIsAdmin} /> : <Navigate to="/" />}
+            element={
+              isAdmin || localStorage.getItem("isAuthenticated") === "true" ? (
+                <AdminDashboard />
+              ) : (
+                <Navigate to="/" />
+              )
+            }
           />
         </Routes>
       </div>

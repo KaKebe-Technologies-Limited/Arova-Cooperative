@@ -7,11 +7,14 @@ import AnimatedCounter from "../components/AnimatedCounter";
 import { ArrowRight, Target, Heart, Lock, Calendar } from "lucide-react";
 import { useContext } from "react";
 import { adjustColor } from "../ThemeContext";
+import { useNavigate } from "react-router-dom";
 
 import RevealOnScroll from "../components/RevealOnScroll";
 
-const HomePage = ({ blogPosts, navigate }) => {
+const HomePage = ({ blogPosts }) => {
   const { resolvedHex, primaryColor } = useContext(ThemeContext);
+
+  const navigate = useNavigate();
 
   return (
     <div className="overflow-x-hidden">

@@ -1,33 +1,90 @@
-import axios from "axios";
 import React, { useState, useEffect, useContext } from "react";
 import {
+  LayoutDashboard,
   FileText,
   Users,
+  Settings,
+  LogOut,
   Plus,
   X,
   Trash2,
   Edit2,
+  Check,
+  Menu,
+  Eye,
+  FileEdit,
+  ArrowRight,
   Upload,
+  Globe,
+  Save,
   ExternalLink,
+  Type,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { SketchPicker } from "react-color";
 import { ThemeContext } from "../ThemeContext";
-import { useRef } from "react";
-
-const SettingsView = () => (
-  <div>
-    <h1 className="text-3xl font-bold mb-8 text-gray-900">Settings</h1>
-    <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
-      <p className="text-gray-600">Settings management coming soon...</p>
-    </div>
-  </div>
-);
 
 /**
  * CONSTANTS & SUB-COMPONENTS (Moved outside to prevent remounting)
  */
+const DEFAULT_POSTS = [
+  {
+    id: 1,
+    title: "From 15 Women to 19,000+ Members",
+    excerpt: "How a small savings group transformed the region.",
+    date: "Dec 14, 2024",
+    image: "/images/blog 1.jpg",
+    category: "Success Story",
+    status: "Published",
+  },
+  {
+    id: 2,
+    title: "Breaking the Poverty Cycle",
+    excerpt: "Low interest loans are changing lives.",
+    date: "Nov 20, 2024",
+    image: "/images/blog 2.jpg",
+    category: "Finance",
+    status: "Published",
+  },
+  {
+    id: 3,
+    title: "Revolutionizing Agriculture via Value Addition",
+    excerpt: "Helping farmers earn more through processing.",
+    date: "Oct 15, 2024",
+    image: "/images/blog 4.webp",
+    category: "Agriculture",
+    status: "Published",
+  },
+  {
+    id: 4,
+    title: "The Power of a Shared Dream",
+    excerpt: "It started with 15 women.",
+    date: "Sep 08, 2024",
+    image: "/images/blog 5.jpg",
+    category: "Community",
+    status: "Published",
+  },
+  {
+    id: 5,
+    title: "Serving the Lango & Acholi Sub-regions",
+    excerpt: "Expanding across Northern Uganda.",
+    date: "Aug 22, 2024",
+    image: "/images/blog 3.jpg",
+    category: "Impact",
+    status: "Published",
+  },
+  {
+    id: 6,
+    title: "Funding Our Future: 2B UGX",
+    excerpt: "Strategic funding accelerating impact.",
+    date: "Jul 15, 2024",
+    image: "/images/blog 6.jpg",
+    category: "Finance",
+    status: "Published",
+  },
+];
 
 const DEFAULT_TEAM = [
   {
@@ -92,10 +149,11 @@ const DEFAULT_SETTINGS = {
   siteName: "Arova",
   tagline: "Producers & Cooperative Sacco",
   regNo: "12064/RCS",
+  logoUrl: "./logo.png",
+  faviconUrl: "/favicon.ico",
   contact: {
-    address: "Senior Quarters B Cell, Lira City",
-    email: "info@arova.org",
-    phone: "+256 700 000 000",
+    phone: "+256 123 456789",
+    email: "info@arova.com",
   },
   socials: {
     facebook: "https://facebook.com",
@@ -103,403 +161,340 @@ const DEFAULT_SETTINGS = {
     linkedin: "https://linkedin.com",
     instagram: "https://instagram.com",
   },
-  logoUrl: "./logo.png",
 };
 
 const DEFAULT_CONTENT = {
   hero: {
     title: "Let's Change The World With Humanity",
     subtitle: "Established 2008 • Reg No: 12064/RCS",
+    ctaText: "Learn More",
   },
+  about: {
+    title: "From Humble Beginnings to Regional Impact",
+    summary: "In 2008, Arova Producers and Cooperative Sacco was born...",
+  },
+  mission: {
+    text: "Eradicating poverty among members through value addition.",
+  },
+  vision: { text: "To be a leading producer of agricultural products." },
 };
 
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
+const StatCard = ({ label, value, icon: Icon, color }) => (
+  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+    <div className="flex items-center justify-between mb-4">
+      <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
+        <Icon className={color.replace("bg-", "text-")} size={24} />
+      </div>
+    </div>
+    <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
+    <p className="text-gray-500 font-medium text-sm">{label}</p>
+  </div>
+);
 
-const quillFormats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "list",
-  "bullet",
-  "link",
-  "image",
-];
+const DashboardView = ({ posts, teamMembers, setActiveTab }) => {
+  const publishedCount = posts.filter((p) => p.status === "Published").length;
+  const activeTeam = teamMembers.filter((m) => m.active).length;
 
-const AdminDashboard = () => {
-  const { resolvedHex: currentThemeHex } = useContext(ThemeContext);
-
-  const [activeTab] = useState("dashboard");
-  const [posts, setPosts] = useState([]);
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [setSiteSettings] = useState(DEFAULT_SETTINGS);
-  const [pageContent, setPageContent] = useState(DEFAULT_CONTENT);
-
-  const [currentPost, setCurrentPost] = useState({
-    id: null,
-    title: "",
-    excerpt: "",
-    content: "",
-    image: "",
-    category: "",
-    date: "",
-  });
-  const [currentMember, setCurrentMember] = useState({
-    name: "",
-    role: "",
-    img: "",
-    active: true,
-  });
-  const [isEditingPost, setIsEditingPost] = useState(false);
-  const [isEditingMember, setIsEditingMember] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const quillRef = useRef(null);
-  const imageInputRef = useRef(null);
-
-  // Load data
-  useEffect(() => {
-    const defaultPosts = [
-      {
-        id: 1,
-        title: "From 15 Women to 19,000+ Members",
-        excerpt: "How a small savings group transformed the region.",
-        date: "Dec 14, 2024",
-        image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
-        category: "Success Story",
-        content: "<p>Full story here...</p>",
-      },
-      {
-        id: 2,
-        title: "Arova's Impact on Local Agriculture",
-        excerpt: "Empowering farmers with financial tools and training.",
-        date: "Dec 14, 2024",
-        image: "https://images.unsplash.com/photo-1521791136064-7986c2920216",
-        category: "Agriculture",
-        content: "<p>Full story here...</p>",
-      },
-    ];
-
-    const savedPosts = localStorage.getItem("arova_blog_posts");
-    const savedTeam = localStorage.getItem("arova_team");
-    const savedSettings = localStorage.getItem("arova_settings");
-    const savedContent = localStorage.getItem("arova_page_content");
-
-    setPosts(savedPosts ? JSON.parse(savedPosts) : defaultPosts);
-    setTeamMembers(savedTeam ? JSON.parse(savedTeam) : DEFAULT_TEAM);
-    setSiteSettings(
-      savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS
-    );
-    setPageContent(savedContent ? JSON.parse(savedContent) : DEFAULT_CONTENT);
-  }, [setSiteSettings]);
-
-  // File upload (base64)
-  const handleFileUpload = async (file) => {
-    setIsUploading(true); // This shows "uploading..." like a spinning wheel.
-    try {
-      const formData = new FormData(); // This is a bag to hold your picture.
-      formData.append("file", file); // Put the picture in the bag.
-      formData.append(
-        "upload_preset",
-        process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
-      ); // Add your secret rule book name.
-
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      const imageUrl = response.data.secure_url; // This is the magic web address for your picture!
-      setIsUploading(false); // Stop the spinning.
-      return imageUrl; // Give back the address.
-    } catch (error) {
-      console.error("Oops, something went wrong:", error); // Say "uh oh" if there's a mistake.
-      setIsUploading(false);
-      alert("Picture didn't go up. Try again!");
-      return null; // No address if it failed.
-    }
-  };
-
-  // Quill image handler
-  const handleQuillImage = () => {
-    imageInputRef.current.click();
-  };
-
-  const onQuillImageSelect = async (e) => {
-    const file = e.target.files[0];
-    if (file && quillRef.current) {
-      const url = await handleFileUpload(file);
-      const quill = quillRef.current.getEditor();
-      const range = quill.getSelection(true);
-      quill.insertEmbed(range.index, "image", url);
-      e.target.value = ""; // reset input
-    }
-  };
-
-  useEffect(() => {
-    if (
-      quillRef.current &&
-      (activeTab === "stories" || activeTab === "content")
-    ) {
-      const quill = quillRef.current.getEditor();
-      quill.getModule("toolbar").addHandler("image", handleQuillImage);
-    }
-  }, [activeTab]);
-
-  // Save post
-  const handleSavePost = () => {
-    let updatedPosts;
-    if (isEditingPost) {
-      updatedPosts = posts.map((p) =>
-        p.id === currentPost.id ? currentPost : p
-      );
-    } else {
-      const newPost = {
-        ...currentPost,
-        id: Date.now(),
-        date: new Date().toISOString().split("T")[0],
-      };
-      updatedPosts = [...posts, newPost];
-    }
-    setPosts(updatedPosts);
-    localStorage.setItem("arova_blog_posts", JSON.stringify(updatedPosts));
-    setCurrentPost({
-      id: null,
-      title: "",
-      excerpt: "",
-      content: "",
-      image: "",
-      category: "",
-      date: "",
-    });
-    setIsEditingPost(false);
-  };
-
-  const handleDeletePost = (id) => {
-    const updated = posts.filter((p) => p.id !== id);
-    setPosts(updated);
-    localStorage.setItem("arova_blog_posts", JSON.stringify(updated));
-  };
-
-  // Team handlers
-  const handleSaveMember = async (member) => {
-    let imageUrl = member.img; // Use old picture if no new one.
-    if (member.newImage) {
-      // If there's a new picture file...
-      imageUrl = await handleFileUpload(member.newImage); // Upload it!
-      if (!imageUrl) return; // Stop if upload failed.
-    }
-
-    // const updatedMember = { ...member, img: imageUrl }; // Save with the cloud link.
-    // Now do the rest, like update your list and save to localStorage.
-  };
-
-  const handleDeleteMember = (id) => {
-    const updated = teamMembers.filter((m) => m.id !== id);
-    setTeamMembers(updated);
-    localStorage.setItem("arova_team", JSON.stringify(updated));
-  };
-
-  const saveContent = () => {
-    localStorage.setItem("arova_page_content", JSON.stringify(pageContent));
-  };
-
-  // Dashboard View
-  const DashboardView = () => (
-    <div>
-      <h1 className="text-3xl font-bold mb-8 text-gray-900">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Total Stories</h3>
-            <FileText size={24} className="text-gray-400" />
-          </div>
-          <p className="text-3xl font-bold">{posts.length}</p>
+  return (
+    <div className="space-y-8 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Dashboard Overview
+          </h2>
+          <p className="text-gray-500">System status and key metrics.</p>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Team Members</h3>
-            <Users size={24} className="text-gray-400" />
+        <button
+          onClick={() => setActiveTab("content")}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          Manage Content <ArrowRight size={16} />
+        </button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          label="Published Stories"
+          value={publishedCount}
+          icon={FileText}
+          color="bg-blue-500"
+        />
+        <StatCard
+          label="Active Staff"
+          value={activeTeam}
+          icon={Users}
+          color="bg-emerald-500"
+        />
+        <StatCard
+          label="Pending Drafts"
+          value={posts.length - publishedCount}
+          icon={FileEdit}
+          color="bg-amber-500"
+        />
+      </div>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">
+            Recent Activity
+          </h3>
+          <div className="space-y-4">
+            {posts.slice(0, 10).map((post) => (
+              <div
+                key={post.id}
+                className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
+                  <img
+                    src={post.image}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate text-sm">
+                    {post.title}
+                  </h4>
+                  <p className="text-xs text-gray-500">{post.date}</p>
+                </div>
+                <div className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <Eye size={12} /> {post.views}
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="text-3xl font-bold">{teamMembers.length}</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setActiveTab("team")}
+              className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+            >
+              <div className="mb-2 w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Users size={20} />
+              </div>
+              <span className="font-semibold text-gray-900">Add Staff</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("stories")}
+              className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+            >
+              <div className="mb-2 w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <FileEdit size={20} />
+              </div>
+              <span className="font-semibold text-gray-900">Write Story</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
+};
 
-  // Stories View
-  const StoriesView = () => (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Impact Stories</h1>
-        <button
-          onClick={() => {
-            setCurrentPost({
-              id: null,
-              title: "",
-              excerpt: "",
-              content: "",
-              image: "",
-              category: "",
-              date: "",
-            });
-            setIsEditingPost(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl font-medium"
-          style={{ backgroundColor: currentThemeHex }}
-        >
-          <Plus size={20} />
-          New Story
-        </button>
+const StoriesView = ({
+  posts,
+  isEditingPost,
+  setIsEditingPost,
+  currentPost,
+  setCurrentPost,
+  handleSavePost,
+  handleDeletePost,
+  getThemeHex,
+  handleFileUpload,
+  isUploading,
+}) => (
+  <div className="space-y-6 animate-fade-in-up">
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Blog Posts</h2>
+        <p className="text-gray-500">Manage articles and success stories.</p>
       </div>
+      <button
+        onClick={() => {
+          setCurrentPost({
+            title: "",
+            excerpt: "",
+            content: "",
+            category: "News",
+            image: "",
+            status: "Published",
+            views: 0,
+          });
+          setIsEditingPost(true);
+        }}
+        className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg"
+        style={{ backgroundColor: getThemeHex() }}
+      >
+        <Plus size={18} /> New Post
+      </button>
+    </div>
 
-      {isEditingPost && (
-        <div className="bg-white p-8 rounded-xl shadow-lg mb-12">
-          <h2 className="text-2xl font-bold mb-6">
-            {currentPost.id ? "Edit Story" : "Add New Story"}
-          </h2>
-          <div className="space-y-6">
-            <input
-              type="text"
-              placeholder="Title"
-              value={currentPost.title}
-              onChange={(e) =>
-                setCurrentPost({ ...currentPost, title: e.target.value })
-              }
-              className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{ ringColor: currentThemeHex }}
-            />
-            <input
-              type="text"
-              placeholder="Excerpt (short summary)"
-              value={currentPost.excerpt}
-              onChange={(e) =>
-                setCurrentPost({ ...currentPost, excerpt: e.target.value })
-              }
-              className="w-full p-4 border border-gray-200 rounded-xl"
-            />
-            <input
-              type="text"
-              placeholder="Category"
-              value={currentPost.category}
-              onChange={(e) =>
-                setCurrentPost({ ...currentPost, category: e.target.value })
-              }
-              className="w-full p-4 border border-gray-200 rounded-xl"
-            />
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">
-                Featured Image
+    {isEditingPost ? (
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+          <h3 className="text-lg font-bold text-gray-900">
+            {currentPost.id ? "Edit Post" : "Create Post"}
+          </h3>
+          <button
+            onClick={() => setIsEditingPost(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSavePost} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Title
               </label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  if (e.target.files[0]) {
-                    const url = await handleFileUpload(e.target.files[0]);
-                    setCurrentPost({ ...currentPost, image: url });
-                  }
-                }}
-                className="w-full"
+                required
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20"
+                value={currentPost.title || ""}
+                onChange={(e) =>
+                  setCurrentPost((prev) => ({ ...prev, title: e.target.value }))
+                }
               />
-              {currentPost.image && (
-                <img
-                  src={currentPost.image}
-                  alt="Preview"
-                  className="mt-4 h-64 object-cover rounded-xl"
-                />
-              )}
             </div>
-
-            <ReactQuill
-              ref={quillRef}
-              value={currentPost.content}
-              onChange={(value) =>
-                setCurrentPost({ ...currentPost, content: value })
-              }
-              modules={quillModules}
-              formats={quillFormats}
-              placeholder="Write the full story..."
-              className="bg-white"
-            />
-            <input
-              type="file"
-              ref={imageInputRef}
-              onChange={onQuillImageSelect}
-              accept="image/*"
-              style={{ display: "none" }}
-            />
-
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={handleSavePost}
-                disabled={isUploading}
-                className="px-8 py-3 text-white font-bold rounded-xl shadow-lg"
-                style={{ backgroundColor: currentThemeHex }}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
+                value={currentPost.category || ""}
+                onChange={(e) =>
+                  setCurrentPost((prev) => ({
+                    ...prev,
+                    category: e.target.value,
+                  }))
+                }
               >
-                {currentPost.id ? "Update Story" : "Publish Story"}
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentPost({
-                    id: null,
-                    title: "",
-                    excerpt: "",
-                    content: "",
-                    image: "",
-                    category: "",
-                    date: "",
-                  });
-                  setIsEditingPost(false);
-                }}
-                className="px-8 py-3 bg-gray-200 rounded-xl font-medium"
-              >
-                Cancel
-              </button>
+                <option>Success Story</option>
+                <option>Finance</option>
+                <option>Agriculture</option>
+                <option>Community</option>
+                <option>News</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Image
+              </label>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm"
+                  placeholder="URL"
+                  value={currentPost.image || ""}
+                  onChange={(e) =>
+                    setCurrentPost((prev) => ({
+                      ...prev,
+                      image: e.target.value,
+                    }))
+                  }
+                />
+                <label className="p-3 bg-gray-100 rounded-xl cursor-pointer">
+                  <Upload size={20} />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleFileUpload(e, setCurrentPost, "image")
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Excerpt
+              </label>
+              <textarea
+                rows="2"
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
+                value={currentPost.excerpt || ""}
+                onChange={(e) =>
+                  setCurrentPost((prev) => ({
+                    ...prev,
+                    excerpt: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Content
+              </label>
+              <ReactQuill
+                theme="snow"
+                value={currentPost.content || ""}
+                onChange={(c) =>
+                  setCurrentPost((prev) => ({ ...prev, content: c }))
+                }
+                className="h-64 mb-12"
+              />
             </div>
           </div>
-        </div>
-      )}
-
-      <div className="space-y-6">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setIsEditingPost(false)}
+              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isUploading}
+              className="px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg"
+              style={{ backgroundColor: getThemeHex() }}
+            >
+              Save Post
+            </button>
+          </div>
+        </form>
+      </div>
+    ) : (
+      <div className="grid gap-4">
         {posts.map((post) => (
           <div
             key={post.id}
-            className="bg-white p-6 rounded-xl shadow-lg flex justify-between items-center"
+            className="group bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start gap-6"
           >
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
+            <div className="w-full md:w-48 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+              <img
+                src={post.image || "https://via.placeholder.com/300x200"}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1">
+              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-600">
+                {post.category}
+              </span>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
                 {post.title}
               </h3>
-              <p className="text-sm text-gray-600">
-                {post.date || new Date(post.id).toLocaleDateString()}
+              <p className="text-sm text-gray-500 line-clamp-2">
+                {post.excerpt}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex md:flex-col gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => {
                   setCurrentPost(post);
                   setIsEditingPost(true);
                 }}
-                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition"
+                className="p-2 text-gray-500 hover:text-blue-600 rounded-lg"
               >
                 <Edit2 size={18} />
               </button>
               <button
                 onClick={() => handleDeletePost(post.id)}
-                className="p-3 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl transition"
+                className="p-2 text-gray-500 hover:text-red-600 rounded-lg"
               >
                 <Trash2 size={18} />
               </button>
@@ -507,299 +502,667 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 
-  // Team View
-  const TeamView = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
-          <p className="text-gray-500">Manage staff profiles and roles.</p>
-        </div>
-        <button
-          onClick={() => {
-            setCurrentMember({ name: "", role: "", img: "", active: true });
-            setIsEditingMember(true);
-          }}
-          className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg"
-          style={{ backgroundColor: currentThemeHex }}
-        >
-          <Plus size={18} /> Add Member
-        </button>
+const TeamView = ({
+  teamMembers,
+  isEditingMember,
+  setIsEditingMember,
+  currentMember,
+  setCurrentMember,
+  handleSaveMember,
+  handleDeleteMember,
+  getThemeHex,
+  handleFileUpload,
+}) => (
+  <div className="space-y-6 animate-fade-in-up">
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
+        <p className="text-gray-500">Manage staff profiles and availability.</p>
       </div>
+      <button
+        onClick={() => {
+          setCurrentMember({ name: "", role: "", img: "", active: true });
+          setIsEditingMember(true);
+        }}
+        className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg"
+        style={{ backgroundColor: getThemeHex() }}
+      >
+        <Plus size={18} /> Add Member
+      </button>
+    </div>
 
-      {isEditingMember ? (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold">Member Details</h3>
-            <button onClick={() => setIsEditingMember(false)}>
-              <X size={20} className="text-gray-400" />
-            </button>
-          </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSaveMember();
-            }}
-            className="space-y-4"
+    {isEditingMember ? (
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+          <h3 className="text-lg font-bold text-gray-900">
+            {currentMember.id ? "Edit Member" : "New Member"}
+          </h3>
+          <button
+            onClick={() => setIsEditingMember(false)}
+            className="text-gray-400"
           >
-            <div>
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSaveMember} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Full Name
               </label>
               <input
                 required
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl"
-                value={currentMember.name}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
+                value={currentMember.name || ""}
                 onChange={(e) =>
-                  setCurrentMember({ ...currentMember, name: e.target.value })
+                  setCurrentMember((p) => ({ ...p, name: e.target.value }))
                 }
               />
             </div>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Role/Position
+                Role / Position
               </label>
               <input
                 required
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl"
-                value={currentMember.role}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
+                value={currentMember.role || ""}
                 onChange={(e) =>
-                  setCurrentMember({ ...currentMember, role: e.target.value })
+                  setCurrentMember((p) => ({ ...p, role: e.target.value }))
                 }
               />
             </div>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Photo URL
+                Active Status
               </label>
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl"
-                  value={currentMember.img}
-                  onChange={(e) =>
-                    setCurrentMember({ ...currentMember, img: e.target.value })
-                  }
-                />
-                <label className="p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors">
-                  <Upload size={20} className="text-gray-600" />
+              <select
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
+                value={currentMember.active}
+                onChange={(e) =>
+                  setCurrentMember((p) => ({
+                    ...p,
+                    active: e.target.value === "true",
+                  }))
+                }
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Profile Image
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden border-2 border-gray-200 shrink-0">
+                  {currentMember.img ? (
+                    <img
+                      src={currentMember.img}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <Users size={24} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 flex gap-2">
                   <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      if (e.target.files[0]) {
-                        const url = await handleFileUpload(e.target.files[0]);
-                        setCurrentMember({ ...currentMember, img: url });
-                      }
-                    }}
+                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                    placeholder="Image URL"
+                    value={currentMember.img || ""}
+                    onChange={(e) =>
+                      setCurrentMember((p) => ({ ...p, img: e.target.value }))
+                    }
                   />
-                </label>
+                  <label className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
+                    <Upload size={20} />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleFileUpload(e, setCurrentMember, "img")
+                      }
+                    />
+                  </label>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 pt-2">
-              <input
-                type="checkbox"
-                id="status"
-                checked={currentMember.active}
-                onChange={(e) =>
-                  setCurrentMember({
-                    ...currentMember,
-                    active: e.target.checked,
-                  })
-                }
-                className="w-5 h-5 rounded"
-              />
-              <label htmlFor="status" className="font-medium text-gray-700">
-                Active (Visible on website)
-              </label>
-            </div>
-            <div className="flex justify-end gap-3 pt-6">
-              <button
-                type="button"
-                onClick={() => setIsEditingMember(false)}
-                className="px-6 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 rounded-xl font-medium text-white"
-                style={{ backgroundColor: currentThemeHex }}
-              >
-                Save Member
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                  Profile
-                </th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                  Name
-                </th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                  Role
-                </th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {teamMembers.map((member) => (
-                <tr
-                  key={member.id}
-                  className="hover:bg-gray-50/50 transition-colors"
-                >
-                  <td className="py-3 px-6">
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setIsEditingMember(false)}
+              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg"
+              style={{ backgroundColor: getThemeHex() }}
+            >
+              {currentMember.id ? "Update Member" : "Save Member"}
+            </button>
+          </div>
+        </form>
+      </div>
+    ) : (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50">
+            <tr className="text-xs font-bold text-gray-500 uppercase">
+              <th className="p-6">Member</th>
+              <th className="p-6">Role</th>
+              <th className="p-6">Status</th>
+              <th className="p-6 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {teamMembers.map((member) => (
+              <tr key={member.id} className="hover:bg-gray-50/50">
+                <td className="p-6">
+                  <div className="flex items-center gap-3">
                     <img
                       src={member.img}
-                      alt={member.name}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      className="w-10 h-10 rounded-full object-cover"
+                      alt=""
                     />
-                  </td>
-                  <td className="py-3 px-6 font-medium text-gray-900">
-                    {member.name}
-                  </td>
-                  <td className="py-3 px-6 text-gray-500">{member.role}</td>
-                  <td className="py-3 px-6">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        member.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {member.active ? "Active" : "Inactive"}
+                    <span className="font-medium text-gray-900">
+                      {member.name}
                     </span>
-                  </td>
-                  <td className="py-3 px-6 text-right space-x-2">
-                    <button
-                      onClick={() => {
-                        setCurrentMember(member);
-                        setIsEditingMember(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMember(member.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
+                  </div>
+                </td>
+                <td className="p-6 text-gray-500">{member.role}</td>
+                <td className="p-6">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      member.active
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {member.active ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td className="p-6 text-right space-x-2">
+                  <button
+                    onClick={() => {
+                      setCurrentMember(member);
+                      setIsEditingMember(true);
+                    }}
+                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMember(member.id)}
+                    className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+);
 
-  // Content View (unchanged)
-  const ContentView = () => (
-    <div>
-      <h1 className="text-3xl font-bold mb-8 text-gray-900">
-        Content Management
-      </h1>
-      <div className="bg-white p-8 rounded-xl shadow-lg space-y-8">
-        <div>
-          <label className="block text-lg font-semibold mb-3">Hero Title</label>
-          <ReactQuill
-            value={pageContent.hero?.title || ""}
-            onChange={(v) =>
-              setPageContent({
-                ...pageContent,
-                hero: { ...pageContent.hero, title: v },
-              })
-            }
-            modules={quillModules}
-            formats={quillFormats}
+const ContentView = ({
+  pageContent,
+  setPageContent,
+  saveContent,
+  getThemeHex,
+}) => (
+  <div className="space-y-8 animate-fade-in-up">
+    <div className="grid md:grid-cols-2 gap-8">
+      <div className="bg-white p-6 rounded-2xl border border-gray-100">
+        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+          <Type size={18} /> Home Hero
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-gray-500">
+              Main Headline
+            </label>
+            <textarea
+              className="w-full p-2 border rounded-lg bg-gray-50"
+              rows="2"
+              value={pageContent.hero.title || ""}
+              onChange={(e) =>
+                setPageContent((prev) => ({
+                  ...prev,
+                  hero: { ...prev.hero, title: e.target.value },
+                }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500">Sub Text</label>
+            <input
+              className="w-full p-2 border rounded-lg bg-gray-50"
+              value={pageContent.hero.subtitle || ""}
+              onChange={(e) =>
+                setPageContent((prev) => ({
+                  ...prev,
+                  hero: { ...prev.hero, subtitle: e.target.value },
+                }))
+              }
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="flex justify-end">
+      <button
+        onClick={() => saveContent(pageContent)}
+        className="px-8 py-3 rounded-xl font-bold text-white shadow-lg"
+        style={{ backgroundColor: getThemeHex() }}
+      >
+        <Save size={20} /> Save Changes
+      </button>
+    </div>
+  </div>
+);
+
+const SettingsView = ({
+  siteSettings,
+  setSiteSettings,
+  saveSettings,
+  getThemeHex,
+  primaryColor,
+  setPrimaryColor,
+  customHex,
+  setCustomHex,
+  handleFileUpload,
+}) => {
+  const colors = [
+    { name: "emerald", hex: "#059669" },
+    { name: "blue", hex: "#2563eb" },
+    { name: "purple", hex: "#7c3aed" },
+    { name: "amber", hex: "#d97706" },
+    { name: "rose", hex: "#e11d48" },
+    { name: "indigo", hex: "#4f46e5" },
+  ];
+  return (
+    <div className="space-y-8 animate-fade-in-up">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="bg-white p-8 rounded-2xl border border-gray-100">
+          <h3 className="text-lg font-bold mb-6">Theme Appearance</h3>
+          <div className="flex flex-wrap gap-4 mb-6">
+            {colors.map((color) => (
+              <button
+                key={color.name}
+                onClick={() => {
+                  setPrimaryColor(color.name);
+                  setCustomHex(null);
+                }}
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: color.hex }}
+              >
+                {primaryColor === color.name && !customHex && (
+                  <Check size={18} className="text-white" />
+                )}
+              </button>
+            ))}
+          </div>
+          <SketchPicker
+            color={getThemeHex()}
+            onChangeComplete={(c) => setCustomHex(c.hex)}
+            disableAlpha
+            width="100%"
           />
         </div>
-        <div>
-          <label className="block text-lg font-semibold mb-3">
-            Hero Subtitle
+        <div className="bg-white p-8 rounded-2xl border border-gray-100 space-y-4">
+          <h3 className="text-lg font-bold">Site Identity</h3>
+          <input
+            className="w-full p-3 bg-gray-50 border rounded-xl"
+            placeholder="Site Name"
+            value={siteSettings.siteName}
+            onChange={(e) =>
+              setSiteSettings((prev) => ({ ...prev, siteName: e.target.value }))
+            }
+          />
+          <input
+            className="w-full p-3 bg-gray-50 border rounded-xl"
+            placeholder="Phone"
+            value={siteSettings.contact.phone}
+            onChange={(e) =>
+              setSiteSettings((prev) => ({
+                ...prev,
+                contact: { ...prev.contact, phone: e.target.value },
+              }))
+            }
+          />
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Browser Favicon
           </label>
-          <ReactQuill
-            value={pageContent.hero?.subtitle || ""}
-            onChange={(v) =>
-              setPageContent({
-                ...pageContent,
-                hero: { ...pageContent.hero, subtitle: v },
-              })
-            }
-            modules={quillModules}
-            formats={quillFormats}
-          />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center shrink-0">
+              {siteSettings.faviconUrl ? (
+                <img
+                  src={siteSettings.faviconUrl}
+                  alt="Favicon"
+                  className="w-8 h-8 object-contain"
+                />
+              ) : (
+                <Globe size={24} className="text-gray-400" />
+              )}
+            </div>
+            <div className="flex-1 flex gap-2">
+              <input
+                className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs"
+                placeholder="Favicon URL"
+                value={siteSettings.faviconUrl || ""}
+                onChange={(e) =>
+                  setSiteSettings((p) => ({ ...p, faviconUrl: e.target.value }))
+                }
+              />
+              <label className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
+                <Upload size={20} />
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/x-icon,image/png,image/jpeg"
+                  onChange={(e) =>
+                    handleFileUpload(e, setSiteSettings, "faviconUrl")
+                  }
+                />
+              </label>
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-400 mt-2">
+            Recommended: .ico or .png (32x32px)
+          </p>
         </div>
-        {/* Add more rich text fields here for other sections */}
+      </div>
+      <div className="flex justify-end">
         <button
-          onClick={saveContent}
-          className="px-8 py-4 text-white font-bold rounded-xl shadow-lg"
-          style={{ backgroundColor: currentThemeHex }}
+          onClick={() => saveSettings(siteSettings)}
+          className="px-8 py-4 rounded-xl font-bold text-white shadow-xl"
+          style={{ backgroundColor: getThemeHex() }}
         >
-          Save All Content
+          <Save size={20} /> Save All
         </button>
       </div>
     </div>
   );
+};
+
+/**
+ * MAIN DASHBOARD COMPONENT
+ */
+
+const AdminDashboard = ({ setIsAdmin }) => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+
+  const themeContext = useContext(ThemeContext);
+  const {
+    primaryColor = "emerald",
+    setPrimaryColor = () => {},
+    customHex = null,
+    setCustomHex = () => {},
+  } = themeContext || {};
+
+  const [posts, setPosts] = useState(() => {
+    const savedPosts = localStorage.getItem("arova_blog_posts");
+    return savedPosts ? JSON.parse(savedPosts) : DEFAULT_POSTS;
+  });
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
+  const [pageContent, setPageContent] = useState(DEFAULT_CONTENT);
+
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [currentPost, setCurrentPost] = useState(null);
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [currentMember, setCurrentMember] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    const savedPosts = localStorage.getItem("arova_blog_posts");
+    setPosts(savedPosts ? JSON.parse(savedPosts) : DEFAULT_POSTS);
+
+    const savedTeam = localStorage.getItem("arova_team_members");
+    setTeamMembers(savedTeam ? JSON.parse(savedTeam) : DEFAULT_TEAM);
+
+    const savedSettings = localStorage.getItem("arova_site_settings");
+    if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
+
+    const savedContent = localStorage.getItem("arova_page_content");
+    if (savedContent) setPageContent(JSON.parse(savedContent));
+  }, []);
+
+  const savePosts = (updatedPosts) => {
+    setPosts(updatedPosts);
+    localStorage.setItem("arova_blog_posts", JSON.stringify(updatedPosts));
+  };
+  const saveTeam = (updatedTeam) => {
+    setTeamMembers(updatedTeam);
+    localStorage.setItem("arova_team_members", JSON.stringify(updatedTeam));
+  };
+  const saveSettings = (updated) => {
+    setSiteSettings(updated);
+    localStorage.setItem("arova_site_settings", JSON.stringify(updated));
+    alert("Saved!");
+  };
+  const saveContent = (updated) => {
+    setPageContent(updated);
+    localStorage.setItem("arova_page_content", JSON.stringify(updated));
+    alert("Updated!");
+  };
+
+  const handleSavePost = (e) => {
+    e.preventDefault();
+    const updated = currentPost.id
+      ? posts.map((p) => (p.id === currentPost.id ? currentPost : p))
+      : [
+          {
+            ...currentPost,
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+          },
+          ...posts,
+        ];
+    savePosts(updated);
+    setIsEditingPost(false);
+    setCurrentPost(null);
+  };
+
+  const handleSaveMember = (e) => {
+    e.preventDefault();
+    const updated = currentMember.id
+      ? teamMembers.map((m) => (m.id === currentMember.id ? currentMember : m))
+      : [...teamMembers, { ...currentMember, id: Date.now() }];
+    saveTeam(updated);
+    setIsEditingMember(false);
+    setCurrentMember(null);
+  };
+
+  const handleFileUpload = (e, setter, field) => {
+    const file = e.target.files[0];
+    if (!file || file.size > 500000) return alert("File too large (>500kb)");
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setter((prev) => ({ ...prev, [field]: reader.result }));
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getThemeHex = () => {
+    const colors = {
+      emerald: "#059669",
+      blue: "#2563eb",
+      purple: "#7c3aed",
+      amber: "#d97706",
+      rose: "#e11d48",
+      indigo: "#4f46e5",
+    };
+    return customHex || colors[primaryColor] || colors.emerald;
+  };
+
+  const navItems = [
+    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+    { id: "stories", label: "Blog Posts", icon: FileText },
+    { id: "team", label: "Team", icon: Users },
+    { id: "content", label: "Content", icon: Type },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <main className="flex-1 flex flex-col">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-medium text-gray-600">
-              <span
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{ backgroundColor: currentThemeHex }}
-              ></span>
-              Live Mode
-            </div>
-          </div>
+    <div
+      className="flex h-screen bg-gray-50 font-sans"
+      style={{ "--primary": getThemeHex() }}
+    >
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform md:relative md:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6 border-b border-slate-800 font-bold text-xl">
+          Admin
+        </div>
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium ${
+                  isActive ? "text-white" : "text-slate-400"
+                }`}
+                style={isActive ? { backgroundColor: getThemeHex() } : {}}
+              >
+                <Icon size={20} /> {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <Link
+            to="/blog"
+            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            <FileText size={18} />
+            <span>View Blog</span>
+          </Link>
 
-          <div className="flex items-center gap-4">
-            <Link
-              to="/blog"
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition"
-            >
-              <FileText size={16} />
-              View Blog
-            </Link>
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            <ExternalLink size={18} />
+            <span>Exit to Site</span>
+          </Link>
 
-            <Link
-              to="/"
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition"
-            >
-              <ExternalLink size={16} />
-              Exit to Site
-            </Link>
-          </div>
+          {/* Logout */}
+          <button
+            onClick={() => {
+              localStorage.removeItem("isAuthenticated");
+
+              navigate("/");
+
+              window.location.reload();
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-6">
+          <button
+            onClick={() => setSidebarOpen(!isSidebarOpen)}
+            className="md:hidden"
+          >
+            <Menu />
+          </button>
+          <h1 className="text-xl font-bold capitalize">{activeTab}</h1>
         </header>
-
         <div className="flex-1 overflow-y-auto p-6 md:p-10">
           <div className="max-w-7xl mx-auto">
-            {activeTab === "dashboard" && <DashboardView />}
-            {activeTab === "stories" && <StoriesView />}
-            {activeTab === "team" && <TeamView />}
-            {activeTab === "content" && <ContentView />}
-            {activeTab === "settings" && <SettingsView />}
+            {activeTab === "dashboard" && (
+              <DashboardView
+                posts={posts}
+                teamMembers={teamMembers}
+                setActiveTab={setActiveTab}
+              />
+            )}
+            {activeTab === "stories" && (
+              <StoriesView
+                posts={posts}
+                isEditingPost={isEditingPost}
+                setIsEditingPost={setIsEditingPost}
+                currentPost={currentPost}
+                setCurrentPost={setCurrentPost}
+                handleSavePost={handleSavePost}
+                handleDeletePost={(id) =>
+                  savePosts(posts.filter((p) => p.id !== id))
+                }
+                getThemeHex={getThemeHex}
+                handleFileUpload={handleFileUpload}
+                isUploading={isUploading}
+              />
+            )}
+            {activeTab === "team" && (
+              <TeamView
+                teamMembers={teamMembers}
+                isEditingMember={isEditingMember}
+                setIsEditingMember={setIsEditingMember}
+                currentMember={currentMember}
+                setCurrentMember={setCurrentMember}
+                handleSaveMember={handleSaveMember}
+                handleDeleteMember={(id) =>
+                  saveTeam(teamMembers.filter((m) => m.id !== id))
+                }
+                getThemeHex={getThemeHex}
+                handleFileUpload={handleFileUpload}
+              />
+            )}
+            {activeTab === "content" && (
+              <ContentView
+                pageContent={pageContent}
+                setPageContent={setPageContent}
+                saveContent={saveContent}
+                getThemeHex={getThemeHex}
+              />
+            )}
+            {activeTab === "settings" && (
+              <SettingsView
+                siteSettings={siteSettings}
+                setSiteSettings={setSiteSettings}
+                saveSettings={saveSettings}
+                getThemeHex={getThemeHex}
+                primaryColor={primaryColor}
+                setPrimaryColor={setPrimaryColor}
+                customHex={customHex}
+                setCustomHex={setCustomHex}
+                handleFileUpload={handleFileUpload}
+              />
+            )}
           </div>
         </div>
       </main>

@@ -24,7 +24,7 @@ const FoundersMessage = () => {
                 <img
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop"
                   alt="Brenda Komagum"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-r-3xl shadow-xl"
                 />
               </div>
             </div>

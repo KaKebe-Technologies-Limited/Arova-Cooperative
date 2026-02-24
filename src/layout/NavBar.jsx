@@ -84,6 +84,48 @@ const Navbar = ({
           {isMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
+
+      {/* Mobile Menu Panel */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-100 pb-6 px-6">
+          <div className="flex flex-col gap-4 mt-4">
+            {["Home", "About", "Team", "Blog", "Contact"].map((item) => (
+              <Link
+                key={item}
+                to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                className="hover:opacity-80 transition py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item}
+              </Link>
+            ))}
+
+            {!isAdmin && (
+              <button
+                onClick={() => {
+                  setShowAdminLogin(true);
+                  setIsMenuOpen(false);
+                }}
+                style={{ color: primaryColor }}
+                className="font-bold py-2 text-left"
+              >
+                Admin
+              </button>
+            )}
+
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="text-white px-6 py-3 rounded-full font-bold shadow-lg text-center"
+                style={{ backgroundColor: primaryColor }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Panel
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

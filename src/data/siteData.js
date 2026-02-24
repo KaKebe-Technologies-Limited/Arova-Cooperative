@@ -24,12 +24,12 @@ const teamData = [
   {
     name: "Denis Peter Odongo",
     role: "Head Finance & Admin",
-    img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
+    img: "../images/peter.jpg",
   },
   {
     name: "Susan Akello",
     role: "Head Operations & Credit",
-    img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+    img: "../images/susan.jpg",
   },
   {
     name: "Bob Obwor",
@@ -39,22 +39,22 @@ const teamData = [
   {
     name: "Apali Caeser",
     role: "Branch Manager",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    img: "../images/ceaser.jpg",
   },
   {
     name: "Nyaketcho Catherine",
     role: "Admin Assistant",
-    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    img: "../images/catherine.jpg",
   },
   {
     name: "Acola Fiona",
     role: "Loan Officer",
-    img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=400&fit=crop",
+    img: "../images/finoa.jpg",
   },
   {
     name: "Daniel",
     role: "Loan Officer",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+    img: "../images/dainel.jpg",
   },
 ];
 

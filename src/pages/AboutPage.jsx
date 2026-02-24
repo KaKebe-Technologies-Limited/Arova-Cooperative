@@ -11,7 +11,7 @@ const AboutPage = () => {
       <div className="relative h-[60vh] flex items-center justify-center bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <img
-            src="https://images.unsplash.com/photo-1595841696677-6489ff3f8cd1?w=1600&h=900&fit=crop"
+            src="../images/about-pic.jpeg"
             alt="About Hero"
             className="w-full h-full object-cover"
           />
@@ -20,10 +20,10 @@ const AboutPage = () => {
 
         <div className="relative z-10 text-center text-white px-6 max-w-4xl">
           <RevealOnScroll>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">Our Journey</h1>
+            <h1 className="text-3xl md:text-7xl font-bold mb-6">Our Journey</h1>
           </RevealOnScroll>
           <RevealOnScroll delay={200}>
-            <p className="text-xl md:text-2xl text-gray-200">
+            <p className="text-lg md:text-2xl text-gray-200">
               From 15 women under a tree to a regional force for change.
             </p>
           </RevealOnScroll>
@@ -35,7 +35,7 @@ const AboutPage = () => {
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <RevealOnScroll>
             <img
-              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=900&h=700&fit=crop"
+              src="../images/arova-whoweare.jpeg"
               alt="Women working together"
               className="rounded-2xl object-cover"
             />
@@ -91,7 +91,7 @@ const AboutPage = () => {
                     </span>
                     <h3
                       style={{ color: primaryColor }}
-                      className="text-2xl font-bold mb-4"
+                      className="text-xl md:text-2xl font-bold mb-4"
                     >
                       Humble Beginnings
                     </h3>
@@ -125,7 +125,7 @@ const AboutPage = () => {
                     </span>
                     <h3
                       style={{ color: primaryColor }}
-                      className="text-2xl font-bold mb-4"
+                      className="text-xl md:text-2xl font-bold mb-4"
                     >
                       Official Registration
                     </h3>
@@ -149,7 +149,7 @@ const AboutPage = () => {
                     </span>
                     <h3
                       style={{ color: primaryColor }}
-                      className="text-2xl font-bold mb-4"
+                      className="text-xl md:text-2xl font-bold mb-4"
                     >
                       Permanent Registration
                     </h3>

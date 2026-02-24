@@ -21,7 +21,7 @@ const HomePage = ({ blogPosts }) => {
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
         <div className="absolute inset-0 opacity-50 animate-slow-zoom">
           <img
-            src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1600&h=900&fit=crop"
+            src="../images/arova-bg.jpg"
             alt="Background"
             className="w-full h-full object-cover"
           />
@@ -45,7 +45,7 @@ const HomePage = ({ blogPosts }) => {
             </div>
           </RevealOnScroll>
           <RevealOnScroll delay={200}>
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+            <h1 className="text-3xl md:text-7xl font-bold mb-8 leading-tight">
               Let's Change The World <br />
               <span style={{ color: resolvedHex }}>With Humanity</span>
             </h1>

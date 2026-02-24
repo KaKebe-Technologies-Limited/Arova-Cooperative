@@ -19,10 +19,10 @@ const FoundersMessage = () => {
             ></div>
 
             {/* SQUARE IMAGE */}
-            <div className="shrink-0">
-              <div className="w-48 h-48 md:w-64 md:h-64 overflow-hidden">
+            <div className="shrink-0 pl-4 md:pl-0">
+              <div className="w-40 h-40 md:w-64 md:h-64 overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop"
+                  src="../images/arova-manager.jpeg"
                   alt="Brenda Komagum"
                   className="w-full h-full object-cover rounded-r-3xl shadow-xl"
                 />

@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
-import { Link, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import RevealOnScroll from "../components/RevealOnScroll";
 
 const BiographySection = () => {
@@ -37,7 +38,7 @@ const BiographySection = () => {
                   !resolvedHex
                     ? `${getThemeClass("bg", "100")} ${getThemeClass(
                         "text",
-                        "600"
+                        "600",
                       )}`
                     : ""
                 }`}

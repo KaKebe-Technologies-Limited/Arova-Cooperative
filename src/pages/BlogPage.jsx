@@ -1,9 +1,19 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "../ThemeContext";
 import RevealOnScroll from "../components/RevealOnScroll";
+import { postsAPI } from "../api";
 
-const BlogPage = ({ blogPosts }) => {
+const BlogPage = () => {
   const { resolvedHex: primaryColor } = useContext(ThemeContext);
+  const [blogPosts, setBlogPosts] = useState([]);
+
+  useEffect(() => {
+    postsAPI
+      .getAll({ status: "PUBLISHED" })
+      .then((res) => setBlogPosts(res.data.posts || []))
+      .catch(() => setBlogPosts([]));
+  }, []);
+
   return (
     <div className="py-20 bg-white min-h-screen">
       <div className="max-w-7xl mx-auto px-6">

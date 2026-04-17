@@ -1,3 +1,4 @@
+import { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "../ThemeContext";
 import BiographySection from "../sections/BiographySection";
 import FoundersMessage from "../sections/FoundersMessage";
@@ -5,16 +6,22 @@ import TestimonialsSection from "../sections/TestimonialsSection";
 import { statsData, coreValuesData } from "../data/siteData";
 import AnimatedCounter from "../components/AnimatedCounter";
 import { ArrowRight, Target, Heart, Lock, Calendar } from "lucide-react";
-import { useContext } from "react";
 import { adjustColor } from "../ThemeContext";
 import { useNavigate } from "react-router-dom";
-
 import RevealOnScroll from "../components/RevealOnScroll";
+import { postsAPI } from "../api";
 
-const HomePage = ({ blogPosts }) => {
+const HomePage = () => {
   const { resolvedHex, primaryColor } = useContext(ThemeContext);
-
   const navigate = useNavigate();
+  const [blogPosts, setBlogPosts] = useState([]);
+
+  useEffect(() => {
+    postsAPI
+      .getAll({ status: "PUBLISHED", limit: 3 })
+      .then((res) => setBlogPosts(res.data.posts || []))
+      .catch(() => setBlogPosts([]));
+  }, []);
 
   return (
     <div className="overflow-x-hidden">
@@ -200,6 +207,7 @@ const HomePage = ({ blogPosts }) => {
               <p className="text-xl text-gray-600">Updates from the field.</p>
             </div>
           </RevealOnScroll>
+
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {blogPosts.slice(0, 6).map((post, idx) => (
               <RevealOnScroll key={post.id} delay={idx * 150}>
@@ -238,6 +246,15 @@ const HomePage = ({ blogPosts }) => {
                 </div>
               </RevealOnScroll>
             ))}
+          </div>
+          <div className="text-center">
+            <button
+              onClick={() => navigate("/blog")}
+              style={{ backgroundColor: resolvedHex }}
+              className="px-8 py-4 text-white rounded-full font-semibold text-lg shadow-lg hover:-translate-y-1 transform transition-all duration-300 inline-flex items-center gap-2"
+            >
+              View All Stories <ArrowRight size={20} />
+            </button>
           </div>
         </div>
       </div>

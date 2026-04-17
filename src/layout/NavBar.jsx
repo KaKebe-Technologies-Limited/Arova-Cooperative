@@ -1,18 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
-const Navbar = ({
-  isMenuOpen,
-  setIsMenuOpen,
-  isAdmin,
-  setShowAdminLogin,
-  primaryColor,
-}) => {
+const Navbar = ({ isMenuOpen, setIsMenuOpen, primaryColor }) => {
   const location = useLocation();
-  const [isHoveringAdmin, setIsHoveringAdmin] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  if (location.pathname === "/admin") return null;
+  if (location.pathname === "/admin" || location.pathname === "/admin/login")
+    return null;
 
   const darkenColor = (hex, amount = 0.15) => {
     if (!hex) return hex;
@@ -25,7 +20,7 @@ const Navbar = ({
     return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
   };
 
-  const adminBg = isHoveringAdmin ? darkenColor(primaryColor) : primaryColor;
+  const adminBg = isAuthenticated ? darkenColor(primaryColor) : primaryColor;
 
   return (
     <nav className="fixed w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -45,36 +40,6 @@ const Navbar = ({
               {item}
             </Link>
           ))}
-
-          {!isAdmin && (
-            <button
-              onClick={() => setShowAdminLogin(true)}
-              style={{ color: primaryColor }}
-              className="font-bold"
-            >
-              Admin
-            </button>
-          )}
-
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="text-white px-6 py-3 rounded-full font-bold shadow-lg transition-all"
-              style={{
-                backgroundColor: adminBg,
-                transform: isHoveringAdmin
-                  ? "translateY(-2px)"
-                  : "translateY(0)",
-                boxShadow: isHoveringAdmin
-                  ? "0 8px 20px rgba(0,0,0,0.15)"
-                  : "0 4px 14px rgba(0,0,0,0.1)",
-              }}
-              onMouseEnter={() => setIsHoveringAdmin(true)}
-              onMouseLeave={() => setIsHoveringAdmin(false)}
-            >
-              Admin Panel
-            </Link>
-          )}
         </div>
 
         <button
@@ -99,30 +64,6 @@ const Navbar = ({
                 {item}
               </Link>
             ))}
-
-            {!isAdmin && (
-              <button
-                onClick={() => {
-                  setShowAdminLogin(true);
-                  setIsMenuOpen(false);
-                }}
-                style={{ color: primaryColor }}
-                className="font-bold py-2 text-left"
-              >
-                Admin
-              </button>
-            )}
-
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="text-white px-6 py-3 rounded-full font-bold shadow-lg text-center"
-                style={{ backgroundColor: primaryColor }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Admin Panel
-              </Link>
-            )}
           </div>
         </div>
       )}

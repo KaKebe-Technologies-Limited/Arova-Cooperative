@@ -7,1167 +7,823 @@ import {
   LogOut,
   Plus,
   X,
-  Trash2,
-  Edit2,
-  Check,
   Menu,
   Eye,
   FileEdit,
-  ArrowRight,
   Upload,
-  Globe,
   Save,
-  ExternalLink,
-  Type,
+  Heart,
+  TrendingUp,
+  ListChecks,
+  MessageSquare,
+  Link as LinkIcon,
+  ArrowUpRight,
+  Edit2,
+  Trash2,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { SketchPicker } from "react-color";
 import { ThemeContext } from "../ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  postsAPI,
+  teamAPI,
+  testimonialsAPI,
+  statsAPI,
+  coreValuesAPI,
+  contactSubmissionsAPI,
+  socialLinksAPI,
+  pageContentAPI,
+  uploadAPI,
+} from "../api";
+import {
+  TeamManager,
+  TestimonialsManager,
+  StatsManager,
+  CoreValuesManager,
+  ContactInbox,
+  SocialLinksManager,
+  ContentEditor,
+  SettingsPanel,
+} from "../components/admin/Managers";
 
-/**
- * CONSTANTS & SUB-COMPONENTS (Moved outside to prevent remounting)
- */
-const DEFAULT_POSTS = [
-  {
-    id: 1,
-    title: "From 15 Women to 19,000+ Members",
-    excerpt: "How a small savings group transformed the region.",
-    date: "Dec 14, 2024",
-    image: "/images/blog 1.jpg",
-    category: "Success Story",
-    status: "Published",
-  },
-  {
-    id: 2,
-    title: "Breaking the Poverty Cycle",
-    excerpt: "Low interest loans are changing lives.",
-    date: "Nov 20, 2024",
-    image: "/images/blog 2.jpg",
-    category: "Finance",
-    status: "Published",
-  },
-  {
-    id: 3,
-    title: "Revolutionizing Agriculture via Value Addition",
-    excerpt: "Helping farmers earn more through processing.",
-    date: "Oct 15, 2024",
-    image: "/images/blog 4.webp",
-    category: "Agriculture",
-    status: "Published",
-  },
-  {
-    id: 4,
-    title: "The Power of a Shared Dream",
-    excerpt: "It started with 15 women.",
-    date: "Sep 08, 2024",
-    image: "/images/blog 5.jpg",
-    category: "Community",
-    status: "Published",
-  },
-  {
-    id: 5,
-    title: "Serving the Lango & Acholi Sub-regions",
-    excerpt: "Expanding across Northern Uganda.",
-    date: "Aug 22, 2024",
-    image: "/images/blog 3.jpg",
-    category: "Impact",
-    status: "Published",
-  },
-  {
-    id: 6,
-    title: "Funding Our Future: 2B UGX",
-    excerpt: "Strategic funding accelerating impact.",
-    date: "Jul 15, 2024",
-    image: "/images/blog 6.jpg",
-    category: "Finance",
-    status: "Published",
-  },
-];
+// ==================== ADMIN DASHBOARD ====================
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+  const { theme, setTheme } = useContext(ThemeContext);
 
-const DEFAULT_TEAM = [
-  {
-    id: 1,
-    name: "Brenda Komagum",
-    role: "Manager",
-    img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Denis Peter Odongo",
-    role: "Head Finance & Admin",
-    img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 3,
-    name: "Susan Akello",
-    role: "Head Operations & Credit",
-    img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 4,
-    name: "Bob Obwor",
-    role: "Accountant",
-    img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 5,
-    name: "Apali Caeser",
-    role: "Branch Manager",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 6,
-    name: "Nyaketcho Catherine",
-    role: "Admin Assistant",
-    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=387&auto=format&fit=crop",
-    active: true,
-  },
-  {
-    id: 7,
-    name: "Acola Fiona",
-    role: "Loan Officer",
-    img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=400&fit=crop",
-    active: true,
-  },
-  {
-    id: 8,
-    name: "Daniel",
-    role: "Loan Officer",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-    active: true,
-  },
-];
+  // Data states
+  const [posts, setPosts] = useState([]);
+  const [team, setTeam] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [coreValues, setCoreValues] = useState([]);
+  const [contactSubmissions, setContactSubmissions] = useState([]);
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [pageContent, setPageContent] = useState([]);
 
-const DEFAULT_SETTINGS = {
-  siteName: "Arova",
-  tagline: "Producers & Cooperative Sacco",
-  regNo: "12064/RCS",
-  logoUrl: "./logo.png",
-  faviconUrl: "/favicon.ico",
-  contact: {
-    phone: "+256 123 456789",
-    email: "info@arova.com",
-  },
-  socials: {
-    facebook: "https://facebook.com",
-    twitter: "https://twitter.com",
-    linkedin: "https://linkedin.com",
-    instagram: "https://instagram.com",
-  },
-};
+  // Fetch all data on mount
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-const DEFAULT_CONTENT = {
-  hero: {
-    title: "Let's Change The World With Humanity",
-    subtitle: "Established 2008 • Reg No: 12064/RCS",
-    ctaText: "Learn More",
-  },
-  about: {
-    title: "From Humble Beginnings to Regional Impact",
-    summary: "In 2008, Arova Producers and Cooperative Sacco was born...",
-  },
-  mission: {
-    text: "Eradicating poverty among members through value addition.",
-  },
-  vision: { text: "To be a leading producer of agricultural products." },
-};
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [
+        postsRes,
+        teamRes,
+        testimonialsRes,
+        statsRes,
+        coreValuesRes,
+        submissionsRes,
+        socialRes,
+        contentRes,
+      ] = await Promise.all([
+        postsAPI.getAll({ limit: 100 }),
+        teamAPI.getAll(),
+        testimonialsAPI.getAll(),
+        statsAPI.getAll(),
+        coreValuesAPI.getAll(),
+        contactSubmissionsAPI.getAll({ limit: 50 }),
+        socialLinksAPI.getAll(),
+        pageContentAPI.getAll(),
+      ]);
 
-const StatCard = ({ label, value, icon: Icon, color }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-    <div className="flex items-center justify-between mb-4">
-      <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
-        <Icon className={color.replace("bg-", "text-")} size={24} />
+      setPosts(postsRes.data.posts || []);
+      setTeam(teamRes.data.members || []);
+      setTestimonials(testimonialsRes.data.testimonials || []);
+      setStats(statsRes.data.stats || []);
+      setCoreValues(coreValuesRes.data.coreValues || []);
+      setContactSubmissions(submissionsRes.data.submissions || []);
+      setSocialLinks(socialRes.data.socialLinks || []);
+      setPageContent(contentRes.data.content || []);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "posts", label: "Blog Posts", icon: FileText },
+    { id: "team", label: "Team", icon: Users },
+    { id: "testimonials", label: "Testimonials", icon: Heart },
+    { id: "stats", label: "Statistics", icon: TrendingUp },
+    { id: "core-values", label: "Core Values", icon: ListChecks },
+    { id: "contact-inbox", label: "Contact Inbox", icon: MessageSquare },
+    { id: "social-links", label: "Social Links", icon: LinkIcon },
+    { id: "content", label: "Content", icon: FileEdit },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <svg
+            className="animate-spin h-12 w-12 mx-auto text-emerald-600"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+        </div>
       </div>
-    </div>
-    <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
-    <p className="text-gray-500 font-medium text-sm">{label}</p>
-  </div>
-);
-
-const DashboardView = ({ posts, teamMembers, setActiveTab }) => {
-  const publishedCount = posts.filter((p) => p.status === "Published").length;
-  const activeTeam = teamMembers.filter((m) => m.active).length;
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Dashboard Overview
-          </h2>
-          <p className="text-gray-500">System status and key metrics.</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:inset-0`}
+      >
+        <div className="flex items-center justify-between h-20 px-6 border-b border-gray-800">
+          <Link
+            to="/"
+            className="flex items-center gap-3 hover:opacity-80 transition"
+          >
+            <img src="./logo.png" alt="Logo" className="w-10" />
+            <span className="font-bold text-xl">Arova Admin</span>
+          </Link>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
+            <X size={24} />
+          </button>
         </div>
-        <button
-          onClick={() => setActiveTab("content")}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          Manage Content <ArrowRight size={16} />
-        </button>
+
+        <div className="px-6 py-4 border-b border-gray-800">
+          <p className="text-sm text-gray-400">Logged in as</p>
+          <p className="font-semibold">{user?.name || "Admin"}</p>
+          <p className="text-xs text-gray-400">{user?.role || "SUPER_ADMIN"}</p>
+        </div>
+
+        <nav className="p-4 space-y-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  activeTab === tab.id
+                    ? "bg-emerald-600 text-white"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <Icon size={20} />
+                <span className="font-medium">{tab.label}</span>
+              </button>
+            );
+          })}
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-900/20 transition-all mt-4"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Logout</span>
+          </button>
+        </nav>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+          <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden">
+            <Menu size={24} />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {tabs.find((t) => t.id === activeTab)?.label}
+          </h1>
+          <Link
+            to="/"
+            className="text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-2"
+          >
+            <ArrowUpRight size={16} />
+            View Site
+          </Link>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto p-6">
+          {activeTab === "dashboard" && (
+            <DashboardOverview
+              posts={posts}
+              team={team}
+              testimonials={testimonials}
+              stats={stats}
+              setActiveTab={setActiveTab}
+            />
+          )}
+          {activeTab === "posts" && (
+            <PostsManager posts={posts} setPosts={setPosts} />
+          )}
+          {activeTab === "team" && (
+            <TeamManager team={team} setTeam={setTeam} />
+          )}
+          {activeTab === "testimonials" && (
+            <TestimonialsManager
+              testimonials={testimonials}
+              setTestimonials={setTestimonials}
+            />
+          )}
+          {activeTab === "stats" && (
+            <StatsManager stats={stats} setStats={setStats} />
+          )}
+          {activeTab === "core-values" && (
+            <CoreValuesManager
+              coreValues={coreValues}
+              setCoreValues={setCoreValues}
+            />
+          )}
+          {activeTab === "contact-inbox" && (
+            <ContactInbox
+              submissions={contactSubmissions}
+              setSubmissions={setContactSubmissions}
+            />
+          )}
+          {activeTab === "social-links" && (
+            <SocialLinksManager
+              socialLinks={socialLinks}
+              setSocialLinks={setSocialLinks}
+            />
+          )}
+          {activeTab === "content" && (
+            <ContentEditor content={pageContent} setContent={setPageContent} />
+          )}
+          {activeTab === "settings" && (
+            <SettingsPanel theme={theme} setTheme={setTheme} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== DASHBOARD OVERVIEW ====================
+const DashboardOverview = ({
+  posts,
+  team,
+  testimonials,
+  stats,
+  setActiveTab,
+}) => {
+  const publishedPosts = posts.filter((p) => p.status === "PUBLISHED").length;
+  const activeTeam = team.filter((t) => t.isActive).length;
+  const activeTestimonials = testimonials.filter((t) => t.isActive).length;
+  const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          label="Published Stories"
-          value={publishedCount}
+          label="Published Posts"
+          value={publishedPosts}
           icon={FileText}
-          color="bg-blue-500"
+          color="emerald"
         />
         <StatCard
           label="Active Staff"
           value={activeTeam}
           icon={Users}
-          color="bg-emerald-500"
+          color="blue"
         />
         <StatCard
-          label="Pending Drafts"
-          value={posts.length - publishedCount}
-          icon={FileEdit}
-          color="bg-amber-500"
+          label="Testimonials"
+          value={activeTestimonials}
+          icon={Heart}
+          color="purple"
+        />
+        <StatCard
+          label="Total Views"
+          value={totalViews}
+          icon={Eye}
+          color="amber"
         />
       </div>
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            Recent Activity
-          </h3>
-          <div className="space-y-4">
-            {posts.slice(0, 10).map((post) => (
-              <div
-                key={post.id}
-                className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
-              >
-                <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
-                  <img
-                    src={post.image}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate text-sm">
-                    {post.title}
-                  </h4>
-                  <p className="text-xs text-gray-500">{post.date}</p>
-                </div>
-                <div className="text-xs font-medium text-gray-400 flex items-center gap-1">
-                  <Eye size={12} /> {post.views}
-                </div>
-              </div>
-            ))}
-          </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => setActiveTab("posts")}
+            className="p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition text-left"
+          >
+            <FileText className="text-emerald-600 mb-2" size={24} />
+            <p className="font-semibold text-gray-900">Manage Posts</p>
+            <p className="text-sm text-gray-600">{posts.length} total posts</p>
+          </button>
+          <button
+            onClick={() => setActiveTab("team")}
+            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition text-left"
+          >
+            <Users className="text-blue-600 mb-2" size={24} />
+            <p className="font-semibold text-gray-900">Manage Team</p>
+            <p className="text-sm text-gray-600">{team.length} members</p>
+          </button>
+          <button
+            onClick={() => setActiveTab("contact-inbox")}
+            className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition text-left"
+          >
+            <MessageSquare className="text-purple-600 mb-2" size={24} />
+            <p className="font-semibold text-gray-900">View Messages</p>
+            <p className="text-sm text-gray-600">Contact submissions</p>
+          </button>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setActiveTab("team")}
-              className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
+      </div>
+
+      {/* Recent Posts */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Posts</h3>
+        <div className="space-y-4">
+          {posts.slice(0, 10).map((post) => (
+            <div
+              key={post.id}
+              className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
             >
-              <div className="mb-2 w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Users size={20} />
+              {post.image && (
+                <img
+                  src={post.image}
+                  alt=""
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">
+                  {post.title}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {post.category} •{" "}
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </p>
               </div>
-              <span className="font-semibold text-gray-900">Add Staff</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("stories")}
-              className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-all group"
-            >
-              <div className="mb-2 w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileEdit size={20} />
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {post.views || 0} views
+                </p>
+                <StatusBadge status={post.status} />
               </div>
-              <span className="font-semibold text-gray-900">Write Story</span>
-            </button>
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
 
-const StoriesView = ({
-  posts,
-  isEditingPost,
-  setIsEditingPost,
-  currentPost,
-  setCurrentPost,
-  handleSavePost,
-  handleDeletePost,
-  getThemeHex,
-  handleFileUpload,
-  isUploading,
-}) => (
-  <div className="space-y-6 animate-fade-in-up">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Blog Posts</h2>
-        <p className="text-gray-500">Manage articles and success stories.</p>
-      </div>
-      <button
-        onClick={() => {
-          setCurrentPost({
-            title: "",
-            excerpt: "",
-            content: "",
-            category: "News",
-            image: "",
-            status: "Published",
-            views: 0,
-          });
-          setIsEditingPost(true);
-        }}
-        className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg"
-        style={{ backgroundColor: getThemeHex() }}
-      >
-        <Plus size={18} /> New Post
-      </button>
-    </div>
+const StatCard = ({ label, value, icon: Icon, color }) => {
+  const colors = {
+    emerald: "bg-emerald-50 text-emerald-600",
+    blue: "bg-blue-50 text-blue-600",
+    purple: "bg-purple-50 text-purple-600",
+    amber: "bg-amber-50 text-amber-600",
+  };
 
-    {isEditingPost ? (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600 mb-1">{label}</p>
+          <p className="text-3xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg ${colors[color]}`}>
+          <Icon size={24} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    PUBLISHED: "bg-green-100 text-green-800",
+    DRAFT: "bg-yellow-100 text-yellow-800",
+    ARCHIVED: "bg-gray-100 text-gray-800",
+  };
+  return (
+    <span
+      className={`text-xs px-2 py-1 rounded-full font-medium ${styles[status] || styles.DRAFT}`}
+    >
+      {status}
+    </span>
+  );
+};
+
+// ==================== POSTS MANAGER ====================
+const PostsManager = ({ posts, setPosts }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    excerpt: "",
+    content: "",
+    image: "",
+    category: "News",
+    status: "DRAFT",
+    seoTitle: "",
+    seoDescription: "",
+  });
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const categories = [
+    "Success Story",
+    "Finance",
+    "Agriculture",
+    "Community",
+    "News",
+    "Impact",
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingPost) {
+        const response = await postsAPI.update(editingPost.id, formData);
+        setPosts(
+          posts.map((p) => (p.id === editingPost.id ? response.data.post : p)),
+        );
+      } else {
+        const response = await postsAPI.create(formData);
+        setPosts([response.data.post, ...posts]);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Failed to save post:", error);
+      alert("Failed to save post");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (post) => {
+    setEditingPost(post);
+    setFormData({
+      title: post.title || "",
+      excerpt: post.excerpt || "",
+      content: post.content || "",
+      image: post.image || "",
+      category: post.category || "News",
+      status: post.status || "DRAFT",
+      seoTitle: post.seoTitle || "",
+      seoDescription: post.seoDescription || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await postsAPI.delete(id);
+      setPosts(posts.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      alert("Failed to delete post");
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const response = await uploadAPI.upload(file);
+      setFormData({ ...formData, image: response.data.url });
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingPost(null);
+    setFormData({
+      title: "",
+      excerpt: "",
+      content: "",
+      image: "",
+      category: "News",
+      status: "DRAFT",
+      seoTitle: "",
+      seoDescription: "",
+    });
+  };
+
+  if (showForm) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-gray-900">
-            {currentPost.id ? "Edit Post" : "Create Post"}
+            {editingPost ? "Edit Post" : "Create New Post"}
           </h3>
           <button
-            onClick={() => setIsEditingPost(false)}
-            className="text-gray-400 hover:text-gray-600"
+            onClick={resetForm}
+            className="p-2 hover:bg-gray-100 rounded-lg transition"
           >
             <X size={20} />
           </button>
         </div>
-        <form onSubmit={handleSavePost} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Title *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              required
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                required
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20"
-                value={currentPost.title || ""}
-                onChange={(e) =>
-                  setCurrentPost((prev) => ({ ...prev, title: e.target.value }))
-                }
-              />
-            </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Category
               </label>
               <select
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                value={currentPost.category || ""}
+                value={formData.category}
                 onChange={(e) =>
-                  setCurrentPost((prev) => ({
-                    ...prev,
-                    category: e.target.value,
-                  }))
+                  setFormData({ ...formData, category: e.target.value })
                 }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               >
-                <option>Success Story</option>
-                <option>Finance</option>
-                <option>Agriculture</option>
-                <option>Community</option>
-                <option>News</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Image
-              </label>
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm"
-                  placeholder="URL"
-                  value={currentPost.image || ""}
-                  onChange={(e) =>
-                    setCurrentPost((prev) => ({
-                      ...prev,
-                      image: e.target.value,
-                    }))
-                  }
-                />
-                <label className="p-3 bg-gray-100 rounded-xl cursor-pointer">
-                  <Upload size={20} />
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) =>
-                      handleFileUpload(e, setCurrentPost, "image")
-                    }
-                  />
-                </label>
-              </div>
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Excerpt
-              </label>
-              <textarea
-                rows="2"
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                value={currentPost.excerpt || ""}
-                onChange={(e) =>
-                  setCurrentPost((prev) => ({
-                    ...prev,
-                    excerpt: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Content
-              </label>
-              <ReactQuill
-                theme="snow"
-                value={currentPost.content || ""}
-                onChange={(c) =>
-                  setCurrentPost((prev) => ({ ...prev, content: c }))
-                }
-                className="h-64 mb-12"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setIsEditingPost(false)}
-              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isUploading}
-              className="px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg"
-              style={{ backgroundColor: getThemeHex() }}
-            >
-              Save Post
-            </button>
-          </div>
-        </form>
-      </div>
-    ) : (
-      <div className="grid gap-4">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="group bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start gap-6"
-          >
-            <div className="w-full md:w-48 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-              <img
-                src={post.image || "https://via.placeholder.com/300x200"}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-600">
-                {post.category}
-              </span>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {post.title}
-              </h3>
-              <p className="text-sm text-gray-500 line-clamp-2">
-                {post.excerpt}
-              </p>
-            </div>
-            <div className="flex md:flex-col gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => {
-                  setCurrentPost(post);
-                  setIsEditingPost(true);
-                }}
-                className="p-2 text-gray-500 hover:text-blue-600 rounded-lg"
-              >
-                <Edit2 size={18} />
-              </button>
-              <button
-                onClick={() => handleDeletePost(post.id)}
-                className="p-2 text-gray-500 hover:text-red-600 rounded-lg"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
-
-const TeamView = ({
-  teamMembers,
-  isEditingMember,
-  setIsEditingMember,
-  currentMember,
-  setCurrentMember,
-  handleSaveMember,
-  handleDeleteMember,
-  getThemeHex,
-  handleFileUpload,
-}) => (
-  <div className="space-y-6 animate-fade-in-up">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
-        <p className="text-gray-500">Manage staff profiles and availability.</p>
-      </div>
-      <button
-        onClick={() => {
-          setCurrentMember({ name: "", role: "", img: "", active: true });
-          setIsEditingMember(true);
-        }}
-        className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg"
-        style={{ backgroundColor: getThemeHex() }}
-      >
-        <Plus size={18} /> Add Member
-      </button>
-    </div>
-
-    {isEditingMember ? (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-          <h3 className="text-lg font-bold text-gray-900">
-            {currentMember.id ? "Edit Member" : "New Member"}
-          </h3>
-          <button
-            onClick={() => setIsEditingMember(false)}
-            className="text-gray-400"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSaveMember} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                required
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                value={currentMember.name || ""}
-                onChange={(e) =>
-                  setCurrentMember((p) => ({ ...p, name: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Role / Position
-              </label>
-              <input
-                required
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                value={currentMember.role || ""}
-                onChange={(e) =>
-                  setCurrentMember((p) => ({ ...p, role: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Active Status
+                Status
               </label>
               <select
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                value={currentMember.active}
+                value={formData.status}
                 onChange={(e) =>
-                  setCurrentMember((p) => ({
-                    ...p,
-                    active: e.target.value === "true",
-                  }))
+                  setFormData({ ...formData, status: e.target.value })
                 }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="ARCHIVED">Archived</option>
               </select>
             </div>
-
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Profile Image
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Excerpt
+            </label>
+            <textarea
+              value={formData.excerpt}
+              onChange={(e) =>
+                setFormData({ ...formData, excerpt: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              rows="2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Content
+            </label>
+            <ReactQuill
+              value={formData.content}
+              onChange={(content) => setFormData({ ...formData, content })}
+              theme="snow"
+              className="bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Featured Image
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                value={formData.image}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                placeholder="https://example.com/image.jpg"
+              />
+              <label className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition flex items-center gap-2">
+                <Upload size={18} />
+                {uploading ? "Uploading..." : "Upload"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
               </label>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden border-2 border-gray-200 shrink-0">
-                  {currentMember.img ? (
-                    <img
-                      src={currentMember.img}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Users size={24} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 flex gap-2">
-                  <input
-                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
-                    placeholder="Image URL"
-                    value={currentMember.img || ""}
-                    onChange={(e) =>
-                      setCurrentMember((p) => ({ ...p, img: e.target.value }))
-                    }
-                  />
-                  <label className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
-                    <Upload size={20} />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleFileUpload(e, setCurrentMember, "img")
-                      }
-                    />
-                  </label>
-                </div>
+            </div>
+            {formData.image && (
+              <img
+                src={formData.image}
+                alt="Preview"
+                className="mt-2 w-32 h-32 object-cover rounded-lg"
+              />
+            )}
+          </div>
+          <div className="border-t border-gray-200 pt-6">
+            <h4 className="text-sm font-bold text-gray-900 mb-4">
+              SEO Settings
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  SEO Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.seoTitle}
+                  onChange={(e) =>
+                    setFormData({ ...formData, seoTitle: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  placeholder={formData.title || "Auto-generated"}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  SEO Description
+                </label>
+                <textarea
+                  value={formData.seoDescription}
+                  onChange={(e) =>
+                    setFormData({ ...formData, seoDescription: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  rows="2"
+                />
               </div>
             </div>
           </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-4">
             <button
               type="button"
-              onClick={() => setIsEditingMember(false)}
-              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100"
+              onClick={resetForm}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg"
-              style={{ backgroundColor: getThemeHex() }}
+              disabled={saving}
+              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
             >
-              {currentMember.id ? "Update Member" : "Save Member"}
+              <Save size={18} />
+              {saving ? "Saving..." : "Save Post"}
             </button>
           </div>
         </form>
       </div>
-    ) : (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50">
-            <tr className="text-xs font-bold text-gray-500 uppercase">
-              <th className="p-6">Member</th>
-              <th className="p-6">Role</th>
-              <th className="p-6">Status</th>
-              <th className="p-6 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {teamMembers.map((member) => (
-              <tr key={member.id} className="hover:bg-gray-50/50">
-                <td className="p-6">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={member.img}
-                      className="w-10 h-10 rounded-full object-cover"
-                      alt=""
-                    />
-                    <span className="font-medium text-gray-900">
-                      {member.name}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-6 text-gray-500">{member.role}</td>
-                <td className="p-6">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      member.active
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {member.active ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td className="p-6 text-right space-x-2">
-                  <button
-                    onClick={() => {
-                      setCurrentMember(member);
-                      setIsEditingMember(true);
-                    }}
-                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMember(member.id)}
-                    className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
-);
+    );
+  }
 
-const ContentView = ({
-  pageContent,
-  setPageContent,
-  saveContent,
-  getThemeHex,
-}) => (
-  <div className="space-y-8 animate-fade-in-up">
-    <div className="grid md:grid-cols-2 gap-8">
-      <div className="bg-white p-6 rounded-2xl border border-gray-100">
-        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-          <Type size={18} /> Home Hero
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-gray-500">
-              Main Headline
-            </label>
-            <textarea
-              className="w-full p-2 border rounded-lg bg-gray-50"
-              rows="2"
-              value={pageContent.hero.title || ""}
-              onChange={(e) =>
-                setPageContent((prev) => ({
-                  ...prev,
-                  hero: { ...prev.hero, title: e.target.value },
-                }))
-              }
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-gray-500">Sub Text</label>
-            <input
-              className="w-full p-2 border rounded-lg bg-gray-50"
-              value={pageContent.hero.subtitle || ""}
-              onChange={(e) =>
-                setPageContent((prev) => ({
-                  ...prev,
-                  hero: { ...prev.hero, subtitle: e.target.value },
-                }))
-              }
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-    <div className="flex justify-end">
+  return (
+    <div className="space-y-4">
       <button
-        onClick={() => saveContent(pageContent)}
-        className="px-8 py-3 rounded-xl font-bold text-white shadow-lg"
-        style={{ backgroundColor: getThemeHex() }}
+        onClick={() => setShowForm(true)}
+        className="w-full md:w-auto px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2 font-semibold"
       >
-        <Save size={20} /> Save Changes
+        <Plus size={20} />
+        Create New Post
       </button>
-    </div>
-  </div>
-);
-
-const SettingsView = ({
-  siteSettings,
-  setSiteSettings,
-  saveSettings,
-  getThemeHex,
-  primaryColor,
-  setPrimaryColor,
-  customHex,
-  setCustomHex,
-  handleFileUpload,
-}) => {
-  const colors = [
-    { name: "emerald", hex: "#059669" },
-    { name: "blue", hex: "#2563eb" },
-    { name: "purple", hex: "#7c3aed" },
-    { name: "amber", hex: "#d97706" },
-    { name: "rose", hex: "#e11d48" },
-    { name: "indigo", hex: "#4f46e5" },
-  ];
-  return (
-    <div className="space-y-8 animate-fade-in-up">
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-2xl border border-gray-100">
-          <h3 className="text-lg font-bold mb-6">Theme Appearance</h3>
-          <div className="flex flex-wrap gap-4 mb-6">
-            {colors.map((color) => (
-              <button
-                key={color.name}
-                onClick={() => {
-                  setPrimaryColor(color.name);
-                  setCustomHex(null);
-                }}
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: color.hex }}
-              >
-                {primaryColor === color.name && !customHex && (
-                  <Check size={18} className="text-white" />
-                )}
-              </button>
-            ))}
-          </div>
-          <SketchPicker
-            color={getThemeHex()}
-            onChangeComplete={(c) => setCustomHex(c.hex)}
-            disableAlpha
-            width="100%"
-          />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  Post
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  Category
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  Status
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  Views
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">
+                  Date
+                </th>
+                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-900">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {posts.map((post) => (
+                <tr key={post.id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      {post.image && (
+                        <img
+                          src={post.image}
+                          alt=""
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {post.title}
+                        </p>
+                        <p className="text-sm text-gray-600 truncate max-w-xs">
+                          {post.excerpt}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900">
+                      {post.category}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${post.status === "PUBLISHED" ? "bg-green-100 text-green-800" : post.status === "DRAFT" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}`}
+                    >
+                      {post.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900">
+                      {post.views || 0}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-600">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(post)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition text-blue-600"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition text-red-600"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="bg-white p-8 rounded-2xl border border-gray-100 space-y-4">
-          <h3 className="text-lg font-bold">Site Identity</h3>
-          <input
-            className="w-full p-3 bg-gray-50 border rounded-xl"
-            placeholder="Site Name"
-            value={siteSettings.siteName}
-            onChange={(e) =>
-              setSiteSettings((prev) => ({ ...prev, siteName: e.target.value }))
-            }
-          />
-          <input
-            className="w-full p-3 bg-gray-50 border rounded-xl"
-            placeholder="Phone"
-            value={siteSettings.contact.phone}
-            onChange={(e) =>
-              setSiteSettings((prev) => ({
-                ...prev,
-                contact: { ...prev.contact, phone: e.target.value },
-              }))
-            }
-          />
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Browser Favicon
-          </label>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center shrink-0">
-              {siteSettings.faviconUrl ? (
-                <img
-                  src={siteSettings.faviconUrl}
-                  alt="Favicon"
-                  className="w-8 h-8 object-contain"
-                />
-              ) : (
-                <Globe size={24} className="text-gray-400" />
-              )}
-            </div>
-            <div className="flex-1 flex gap-2">
-              <input
-                className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs"
-                placeholder="Favicon URL"
-                value={siteSettings.faviconUrl || ""}
-                onChange={(e) =>
-                  setSiteSettings((p) => ({ ...p, faviconUrl: e.target.value }))
-                }
-              />
-              <label className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
-                <Upload size={20} />
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/x-icon,image/png,image/jpeg"
-                  onChange={(e) =>
-                    handleFileUpload(e, setSiteSettings, "faviconUrl")
-                  }
-                />
-              </label>
-            </div>
-          </div>
-          <p className="text-[10px] text-gray-400 mt-2">
-            Recommended: .ico or .png (32x32px)
-          </p>
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <button
-          onClick={() => saveSettings(siteSettings)}
-          className="px-8 py-4 rounded-xl font-bold text-white shadow-xl"
-          style={{ backgroundColor: getThemeHex() }}
-        >
-          <Save size={20} /> Save All
-        </button>
       </div>
     </div>
   );
 };
-
-/**
- * MAIN DASHBOARD COMPONENT
- */
-
-const AdminDashboard = ({ setIsAdmin }) => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const navigate = useNavigate();
-
-  const themeContext = useContext(ThemeContext);
-  const {
-    primaryColor = "emerald",
-    setPrimaryColor = () => {},
-    customHex = null,
-    setCustomHex = () => {},
-  } = themeContext || {};
-
-  const [posts, setPosts] = useState(() => {
-    const savedPosts = localStorage.getItem("arova_blog_posts");
-    return savedPosts ? JSON.parse(savedPosts) : DEFAULT_POSTS;
-  });
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
-  const [pageContent, setPageContent] = useState(DEFAULT_CONTENT);
-
-  const [isEditingPost, setIsEditingPost] = useState(false);
-  const [currentPost, setCurrentPost] = useState(null);
-  const [isEditingMember, setIsEditingMember] = useState(false);
-  const [currentMember, setCurrentMember] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    const savedPosts = localStorage.getItem("arova_blog_posts");
-    setPosts(savedPosts ? JSON.parse(savedPosts) : DEFAULT_POSTS);
-
-    const savedTeam = localStorage.getItem("arova_team_members");
-    setTeamMembers(savedTeam ? JSON.parse(savedTeam) : DEFAULT_TEAM);
-
-    const savedSettings = localStorage.getItem("arova_site_settings");
-    if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
-
-    const savedContent = localStorage.getItem("arova_page_content");
-    if (savedContent) setPageContent(JSON.parse(savedContent));
-  }, []);
-
-  const savePosts = (updatedPosts) => {
-    setPosts(updatedPosts);
-    localStorage.setItem("arova_blog_posts", JSON.stringify(updatedPosts));
-  };
-  const saveTeam = (updatedTeam) => {
-    setTeamMembers(updatedTeam);
-    localStorage.setItem("arova_team_members", JSON.stringify(updatedTeam));
-  };
-  const saveSettings = (updated) => {
-    setSiteSettings(updated);
-    localStorage.setItem("arova_site_settings", JSON.stringify(updated));
-    alert("Saved!");
-  };
-  const saveContent = (updated) => {
-    setPageContent(updated);
-    localStorage.setItem("arova_page_content", JSON.stringify(updated));
-    alert("Updated!");
-  };
-
-  const handleSavePost = (e) => {
-    e.preventDefault();
-    const updated = currentPost.id
-      ? posts.map((p) => (p.id === currentPost.id ? currentPost : p))
-      : [
-          {
-            ...currentPost,
-            id: Date.now(),
-            date: new Date().toLocaleDateString(),
-          },
-          ...posts,
-        ];
-    savePosts(updated);
-    setIsEditingPost(false);
-    setCurrentPost(null);
-  };
-
-  const handleSaveMember = (e) => {
-    e.preventDefault();
-    const updated = currentMember.id
-      ? teamMembers.map((m) => (m.id === currentMember.id ? currentMember : m))
-      : [...teamMembers, { ...currentMember, id: Date.now() }];
-    saveTeam(updated);
-    setIsEditingMember(false);
-    setCurrentMember(null);
-  };
-
-  const handleFileUpload = (e, setter, field) => {
-    const file = e.target.files[0];
-    if (!file || file.size > 500000) return alert("File too large (>500kb)");
-    setIsUploading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setter((prev) => ({ ...prev, [field]: reader.result }));
-      setIsUploading(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const getThemeHex = () => {
-    const colors = {
-      emerald: "#059669",
-      blue: "#2563eb",
-      purple: "#7c3aed",
-      amber: "#d97706",
-      rose: "#e11d48",
-      indigo: "#4f46e5",
-    };
-    return customHex || colors[primaryColor] || colors.emerald;
-  };
-
-  const navItems = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
-    { id: "stories", label: "Blog Posts", icon: FileText },
-    { id: "team", label: "Team", icon: Users },
-    { id: "content", label: "Content", icon: Type },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
-
-  return (
-    <div
-      className="flex h-screen bg-gray-50 font-sans"
-      style={{ "--primary": getThemeHex() }}
-    >
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform md:relative md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-6 border-b border-slate-800 font-bold text-xl">
-          Admin
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium ${
-                  isActive ? "text-white" : "text-slate-400"
-                }`}
-                style={isActive ? { backgroundColor: getThemeHex() } : {}}
-              >
-                <Icon size={20} /> {item.label}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="p-4 border-t border-gray-800 space-y-2">
-          <Link
-            to="/blog"
-            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <FileText size={18} />
-            <span>View Blog</span>
-          </Link>
-
-          <Link
-            to="/"
-            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <ExternalLink size={18} />
-            <span>Exit to Site</span>
-          </Link>
-
-          {/* Logout */}
-          <button
-            onClick={() => {
-              localStorage.removeItem("isAuthenticated");
-
-              navigate("/");
-
-              window.location.reload();
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
-          >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-6">
-          <button
-            onClick={() => setSidebarOpen(!isSidebarOpen)}
-            className="md:hidden"
-          >
-            <Menu />
-          </button>
-          <h1 className="text-xl font-bold capitalize">{activeTab}</h1>
-        </header>
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
-          <div className="max-w-7xl mx-auto">
-            {activeTab === "dashboard" && (
-              <DashboardView
-                posts={posts}
-                teamMembers={teamMembers}
-                setActiveTab={setActiveTab}
-              />
-            )}
-            {activeTab === "stories" && (
-              <StoriesView
-                posts={posts}
-                isEditingPost={isEditingPost}
-                setIsEditingPost={setIsEditingPost}
-                currentPost={currentPost}
-                setCurrentPost={setCurrentPost}
-                handleSavePost={handleSavePost}
-                handleDeletePost={(id) =>
-                  savePosts(posts.filter((p) => p.id !== id))
-                }
-                getThemeHex={getThemeHex}
-                handleFileUpload={handleFileUpload}
-                isUploading={isUploading}
-              />
-            )}
-            {activeTab === "team" && (
-              <TeamView
-                teamMembers={teamMembers}
-                isEditingMember={isEditingMember}
-                setIsEditingMember={setIsEditingMember}
-                currentMember={currentMember}
-                setCurrentMember={setCurrentMember}
-                handleSaveMember={handleSaveMember}
-                handleDeleteMember={(id) =>
-                  saveTeam(teamMembers.filter((m) => m.id !== id))
-                }
-                getThemeHex={getThemeHex}
-                handleFileUpload={handleFileUpload}
-              />
-            )}
-            {activeTab === "content" && (
-              <ContentView
-                pageContent={pageContent}
-                setPageContent={setPageContent}
-                saveContent={saveContent}
-                getThemeHex={getThemeHex}
-              />
-            )}
-            {activeTab === "settings" && (
-              <SettingsView
-                siteSettings={siteSettings}
-                setSiteSettings={setSiteSettings}
-                saveSettings={saveSettings}
-                getThemeHex={getThemeHex}
-                primaryColor={primaryColor}
-                setPrimaryColor={setPrimaryColor}
-                customHex={customHex}
-                setCustomHex={setCustomHex}
-                handleFileUpload={handleFileUpload}
-              />
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
 export default AdminDashboard;

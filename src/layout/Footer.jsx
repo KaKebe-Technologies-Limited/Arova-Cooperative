@@ -1,18 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, MapPin, Phone, Mail } from "lucide-react";
 import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
+  FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaYoutube,
 } from "react-icons/fa6";
 import { useContext } from "react";
 import { ThemeContext } from "../ThemeContext";
+import { socialLinksAPI, contactInfoAPI } from "../api";
+
+const SOCIAL_ICONS = {
+  Facebook:  FaFacebookF,
+  Twitter:   FaTwitter,
+  LinkedIn:  FaLinkedinIn,
+  Instagram: FaInstagram,
+  YouTube:   FaYoutube,
+};
+
+const CONTACT_ICONS = { address: MapPin, phone: Phone, email: Mail };
 
 const Footer = () => {
   const location = useLocation();
   const { primaryColor } = useContext(ThemeContext);
-  // ❌ Hide footer in admin
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [contactInfo, setContactInfo] = useState([]);
+
+  useEffect(() => {
+    socialLinksAPI.getAll()
+      .then((res) => setSocialLinks((res.data.socialLinks || []).filter(l => l.isActive)))
+      .catch(() => {});
+    contactInfoAPI.getAll()
+      .then((res) => setContactInfo((res.data.contactInfo || []).filter(c => c.isActive)))
+      .catch(() => {});
+  }, []);
+
   if (location.pathname.startsWith("/admin")) return null;
 
   return (
@@ -33,19 +53,26 @@ const Footer = () => {
             Empowering communities through agricultural value addition and
             financial services since 2008.
           </p>
-
           <div className="flex gap-4">
-            {[FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram].map(
-              (Icon, i) => (
-                <a
-                  key={i}
-                  href="https://facebook.com"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-white hover:text-gray-900 transition"
-                >
-                  <Icon size={18} />
-                </a>
-              )
-            )}
+            {socialLinks.length > 0
+              ? socialLinks.map((link) => {
+                  const Icon = SOCIAL_ICONS[link.platform];
+                  if (!Icon) return null;
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-white hover:text-gray-900 transition"
+                    >
+                      <Icon size={18} />
+                    </a>
+                  );
+                })
+              : [FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram].map((Icon, i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center animate-pulse" />
+                ))}
           </div>
         </div>
 
@@ -60,10 +87,7 @@ const Footer = () => {
               { label: "Contact Us", path: "/contact" },
             ].map((item) => (
               <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className="flex items-center gap-2 hover:text-white"
-                >
+                <Link to={item.path} className="flex items-center gap-2 hover:text-white">
                   <ArrowRight size={14} style={{ color: primaryColor }} />
                   {item.label}
                 </Link>
@@ -76,27 +100,30 @@ const Footer = () => {
         <div>
           <h4 className="text-white font-bold text-lg mb-6">Contact</h4>
           <ul className="space-y-4">
-            <li className="flex gap-3">
-              <MapPin size={20} style={{ color: primaryColor }} />
-              <span>Lira City, Uganda</span>
-            </li>
-            <li className="flex gap-3">
-              <Phone size={20} style={{ color: primaryColor }} />
-              <span>+256 700 000 000</span>
-            </li>
-            <li className="flex gap-3">
-              <Mail size={20} style={{ color: primaryColor }} />
-              <span>info@arova.org</span>
-            </li>
+            {contactInfo.length > 0
+              ? contactInfo.map((item) => {
+                  const Icon = CONTACT_ICONS[item.key] || MapPin;
+                  return (
+                    <li key={item.id} className="flex gap-3">
+                      <Icon size={20} style={{ color: primaryColor }} className="flex-shrink-0 mt-0.5" />
+                      <span>{item.value}</span>
+                    </li>
+                  );
+                })
+              : (
+                <>
+                  <li className="flex gap-3"><MapPin size={20} style={{ color: primaryColor }} /><span>Lira City, Uganda</span></li>
+                  <li className="flex gap-3"><Phone size={20} style={{ color: primaryColor }} /><span>+256 700 000 000</span></li>
+                  <li className="flex gap-3"><Mail size={20} style={{ color: primaryColor }} /><span>info@arova.org</span></li>
+                </>
+              )}
           </ul>
         </div>
 
         {/* NEWSLETTER */}
         <div>
           <h4 className="text-white font-bold text-lg mb-6">Newsletter</h4>
-          <p className="mb-4">
-            Subscribe to get the latest updates on our impact.
-          </p>
+          <p className="mb-4">Subscribe to get the latest updates on our impact.</p>
           <div className="flex gap-2">
             <input
               className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 w-full text-white"
@@ -113,7 +140,7 @@ const Footer = () => {
       </div>
 
       <div className="border-t border-gray-800 mt-16 pt-8 text-center text-gray-600">
-        &copy; {new Date().getFullYear()} Arova Producers & Cooperative Sacco
+        &copy; {new Date().getFullYear()} Arova Producers &amp; Cooperative Sacco
       </div>
     </footer>
   );

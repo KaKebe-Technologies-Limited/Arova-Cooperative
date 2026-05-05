@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx eslint *)",
+      "Bash(npx prisma *)",
+      "Bash(node -e 'const {PrismaClient}=require\\('\\\\''@prisma/client'\\\\''\\);const p=new PrismaClient\\(\\);p.statItem.count\\(\\).then\\(n=>console.log\\('\\\\''Stats rows:'\\\\'',n\\)\\).then\\(\\(\\)=>p.testimonial.count\\(\\).then\\(n=>console.log\\('\\\\''Testimonials:'\\\\'',n\\)\\)\\).then\\(\\(\\)=>p.coreValue.count\\(\\).then\\(n=>console.log\\('\\\\''CoreValues:'\\\\'',n\\)\\)\\).then\\(\\(\\)=>p.admin.count\\(\\).then\\(n=>console.log\\('\\\\''Admins:'\\\\'',n\\)\\)\\).finally\\(\\(\\)=>p.$disconnect\\(\\)\\)')",
+      "Bash(npm install *)",
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "mcp__plugin_claude-mem_mcp-search__get_observations"
+    ]
+  }
+}

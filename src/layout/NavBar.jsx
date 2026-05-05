@@ -1,26 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 
-const Navbar = ({ isMenuOpen, setIsMenuOpen, primaryColor }) => {
+const Navbar = ({ isMenuOpen, setIsMenuOpen }) => {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
   if (location.pathname === "/admin" || location.pathname === "/admin/login")
     return null;
-
-  const darkenColor = (hex, amount = 0.15) => {
-    if (!hex) return hex;
-
-    const cleanHex = hex.replace("#", "");
-    const r = Math.floor(parseInt(cleanHex.slice(0, 2), 16) * (1 - amount));
-    const g = Math.floor(parseInt(cleanHex.slice(2, 4), 16) * (1 - amount));
-    const b = Math.floor(parseInt(cleanHex.slice(4, 6), 16) * (1 - amount));
-
-    return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
-  };
-
-  const adminBg = isAuthenticated ? darkenColor(primaryColor) : primaryColor;
 
   return (
     <nav className="fixed w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">

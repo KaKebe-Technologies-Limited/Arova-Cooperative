@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
+import ConfirmModal from './ConfirmModal';
 import {
   Plus,
   Edit2,
@@ -41,9 +43,21 @@ export const TeamManager = ({ team, setTeam }) => {
   });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim()) errs.name = "Name is required";
+    if (!formData.role.trim()) errs.role = "Role is required";
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      errs.email = "Enter a valid email address";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setSaving(true);
     try {
       if (editingMember) {
@@ -58,9 +72,10 @@ export const TeamManager = ({ team, setTeam }) => {
         setTeam([...team, response.data.member]);
       }
       resetForm();
+      toast.success('Team member saved!');
     } catch (error) {
       console.error("Failed to save member:", error);
-      alert("Failed to save team member");
+      toast.error("Failed to save team member");
     } finally {
       setSaving(false);
     }
@@ -68,6 +83,7 @@ export const TeamManager = ({ team, setTeam }) => {
 
   const handleEdit = (member) => {
     setEditingMember(member);
+    setErrors({});
     setFormData({
       name: member.name || "",
       role: member.role || "",
@@ -81,15 +97,22 @@ export const TeamManager = ({ team, setTeam }) => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this team member?"))
-      return;
+  const [confirmModal, setConfirmModal] = useState({ open: false, id: null, name: '' });
+
+  const handleDelete = (member) => {
+    setConfirmModal({ open: true, id: member.id, name: member.name });
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await teamAPI.delete(id);
-      setTeam(team.filter((m) => m.id !== id));
+      await teamAPI.delete(confirmModal.id);
+      setTeam(team.filter((m) => m.id !== confirmModal.id));
+      toast.success('Team member deleted');
     } catch (error) {
       console.error("Failed to delete member:", error);
-      alert("Failed to delete team member");
+      toast.error("Failed to delete team member");
+    } finally {
+      setConfirmModal({ open: false, id: null, name: '' });
     }
   };
 
@@ -101,7 +124,7 @@ export const TeamManager = ({ team, setTeam }) => {
       const response = await uploadAPI.upload(file);
       setFormData({ ...formData, image: response.data.url });
     } catch (error) {
-      alert("Failed to upload image");
+      toast.error("Failed to upload image");
     } finally {
       setUploading(false);
     }
@@ -110,6 +133,7 @@ export const TeamManager = ({ team, setTeam }) => {
   const resetForm = () => {
     setShowForm(false);
     setEditingMember(null);
+    setErrors({});
     setFormData({
       name: "",
       role: "",
@@ -148,9 +172,9 @@ export const TeamManager = ({ team, setTeam }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                required
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.name ? "border-red-400" : "border-gray-300"}`}
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -162,9 +186,9 @@ export const TeamManager = ({ team, setTeam }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                required
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.role ? "border-red-400" : "border-gray-300"}`}
               />
+              {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
             </div>
           </div>
           <div>
@@ -191,8 +215,9 @@ export const TeamManager = ({ team, setTeam }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.email ? "border-red-400" : "border-gray-300"}`}
               />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -265,6 +290,14 @@ export const TeamManager = ({ team, setTeam }) => {
   }
 
   return (
+    <>
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="Delete Team Member"
+        message={`Are you sure you want to delete "${confirmModal.name}"? This cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmModal({ open: false, id: null, name: '' })}
+      />
     <div className="space-y-4">
       <button
         onClick={() => setShowForm(true)}
@@ -339,7 +372,7 @@ export const TeamManager = ({ team, setTeam }) => {
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(member.id)}
+                        onClick={() => handleDelete(member)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition text-red-600"
                       >
                         <Trash2 size={16} />
@@ -353,6 +386,7 @@ export const TeamManager = ({ team, setTeam }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
@@ -369,9 +403,20 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
     isActive: true,
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim()) errs.name = "Name is required";
+    if (!formData.text.trim()) errs.text = "Testimonial text is required";
+    else if (formData.text.trim().length < 20) errs.text = "Testimonial must be at least 20 characters";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setSaving(true);
     try {
       if (editingTestimonial) {
@@ -389,9 +434,10 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
         setTestimonials([...testimonials, response.data.testimonial]);
       }
       resetForm();
+      toast.success('Testimonial saved!');
     } catch (error) {
       console.error("Failed to save testimonial:", error);
-      alert("Failed to save testimonial");
+      toast.error("Failed to save testimonial");
     } finally {
       setSaving(false);
     }
@@ -399,6 +445,7 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
 
   const handleEdit = (t) => {
     setEditingTestimonial(t);
+    setErrors({});
     setFormData({
       name: t.name || "",
       role: t.role || "",
@@ -409,18 +456,27 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
     });
     setShowForm(true);
   };
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this testimonial?")) return;
+  const [confirmModal, setConfirmModal] = useState({ open: false, id: null, name: '' });
+
+  const handleDelete = (t) => {
+    setConfirmModal({ open: true, id: t.id, name: t.name });
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await testimonialsAPI.delete(id);
-      setTestimonials(testimonials.filter((t) => t.id !== id));
+      await testimonialsAPI.delete(confirmModal.id);
+      setTestimonials(testimonials.filter((t) => t.id !== confirmModal.id));
+      toast.success('Testimonial deleted');
     } catch (error) {
-      alert("Failed to delete testimonial");
+      toast.error("Failed to delete testimonial");
+    } finally {
+      setConfirmModal({ open: false, id: null, name: '' });
     }
   };
   const resetForm = () => {
     setShowForm(false);
     setEditingTestimonial(null);
+    setErrors({});
     setFormData({
       name: "",
       role: "",
@@ -457,13 +513,13 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.name ? "border-red-400" : "border-gray-300"}`}
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Role
+                Role / Title
               </label>
               <input
                 type="text"
@@ -471,7 +527,8 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                placeholder="e.g. Farmer, Oyam"
               />
             </div>
           </div>
@@ -484,10 +541,11 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
               onChange={(e) =>
                 setFormData({ ...formData, text: e.target.value })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.text ? "border-red-400" : "border-gray-300"}`}
               rows="4"
-              required
+              placeholder="Write the testimonial quote here..."
             />
+            {errors.text && <p className="text-red-500 text-xs mt-1">{errors.text}</p>}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -499,7 +557,8 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
               onChange={(e) =>
                 setFormData({ ...formData, image: e.target.value })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              placeholder="https://example.com/photo.jpg"
             />
           </div>
           <div className="flex items-center justify-end gap-4">
@@ -525,6 +584,14 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
   }
 
   return (
+    <>
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="Delete Testimonial"
+        message={`Are you sure you want to delete "${confirmModal.name}"?`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmModal({ open: false, id: null, name: '' })}
+      />
     <div className="space-y-4">
       <button
         onClick={() => setShowForm(true)}
@@ -572,7 +639,7 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
                 <Edit2 size={16} />
               </button>
               <button
-                onClick={() => handleDelete(t.id)}
+                onClick={() => handleDelete(t)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition text-red-600"
               >
                 <Trash2 size={16} />
@@ -582,6 +649,7 @@ export const TestimonialsManager = ({ testimonials, setTestimonials }) => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 
@@ -606,8 +674,9 @@ export const StatsManager = ({ stats, setStats }) => {
       const response = await statsAPI.update(id, formData);
       setStats(stats.map((s) => (s.id === id ? response.data.stat : s)));
       setEditingId(null);
+      toast.success('Stat updated!');
     } catch (error) {
-      alert("Failed to update stat");
+      toast.error("Failed to update stat");
     } finally {
       setSaving(false);
     }
@@ -739,9 +808,19 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
     isActive: true,
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim()) errs.name = "Name is required";
+    else if (formData.name.trim().length < 2) errs.name = "Name must be at least 2 characters";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
     setSaving(true);
     try {
       if (editingValue) {
@@ -756,14 +835,16 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
         setCoreValues([...coreValues, response.data.coreValue]);
       }
       resetForm();
+      toast.success('Core value saved!');
     } catch (error) {
-      alert("Failed to save core value");
+      toast.error("Failed to save core value");
     } finally {
       setSaving(false);
     }
   };
   const handleEdit = (value) => {
     setEditingValue(value);
+    setErrors({});
     setFormData({
       name: value.name || "",
       description: value.description || "",
@@ -772,18 +853,27 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
     });
     setShowForm(true);
   };
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this core value?")) return;
+  const [confirmModal, setConfirmModal] = useState({ open: false, id: null, name: '' });
+
+  const handleDelete = (v) => {
+    setConfirmModal({ open: true, id: v.id, name: v.name });
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await coreValuesAPI.delete(id);
-      setCoreValues(coreValues.filter((v) => v.id !== id));
+      await coreValuesAPI.delete(confirmModal.id);
+      setCoreValues(coreValues.filter((v) => v.id !== confirmModal.id));
+      toast.success('Core value deleted');
     } catch (error) {
-      alert("Failed to delete core value");
+      toast.error("Failed to delete core value");
+    } finally {
+      setConfirmModal({ open: false, id: null, name: '' });
     }
   };
   const resetForm = () => {
     setShowForm(false);
     setEditingValue(null);
+    setErrors({});
     setFormData({ name: "", description: "", order: 0, isActive: true });
   };
 
@@ -812,9 +902,10 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              required
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${errors.name ? "border-red-400" : "border-gray-300"}`}
+              placeholder="e.g. Accountability"
             />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -825,8 +916,9 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               rows="3"
+              placeholder="Optional — briefly describe this value"
             />
           </div>
           <div className="flex items-center justify-end gap-4">
@@ -852,6 +944,14 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
   }
 
   return (
+    <>
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="Delete Core Value"
+        message={`Are you sure you want to delete "${confirmModal.name}"?`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmModal({ open: false, id: null, name: '' })}
+      />
     <div className="space-y-4">
       <button
         onClick={() => setShowForm(true)}
@@ -885,7 +985,7 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
                 <Edit2 size={16} />
               </button>
               <button
-                onClick={() => handleDelete(v.id)}
+                onClick={() => handleDelete(v)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition text-red-600"
               >
                 <Trash2 size={16} />
@@ -895,6 +995,7 @@ export const CoreValuesManager = ({ coreValues, setCoreValues }) => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 
@@ -912,14 +1013,22 @@ export const ContactInbox = ({ submissions, setSubmissions }) => {
       console.error("Failed to mark as read:", error);
     }
   };
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this submission?")) return;
+  const [confirmModal, setConfirmModal] = useState({ open: false, id: null });
+
+  const handleDelete = (id) => {
+    setConfirmModal({ open: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await contactSubmissionsAPI.delete(id);
-      setSubmissions(submissions.filter((s) => s.id !== id));
+      await contactSubmissionsAPI.delete(confirmModal.id);
+      setSubmissions(submissions.filter((s) => s.id !== confirmModal.id));
       setSelectedSubmission(null);
+      toast.success('Submission deleted');
     } catch (error) {
-      alert("Failed to delete submission");
+      toast.error("Failed to delete submission");
+    } finally {
+      setConfirmModal({ open: false, id: null });
     }
   };
 
@@ -966,6 +1075,13 @@ export const ContactInbox = ({ submissions, setSubmissions }) => {
               <Trash2 size={16} />
               Delete
             </button>
+            <ConfirmModal
+              isOpen={confirmModal.open}
+              title="Delete Submission"
+              message="Are you sure you want to delete this message?"
+              onConfirm={handleDeleteConfirm}
+              onCancel={() => setConfirmModal({ open: false, id: null })}
+            />
           </div>
         </div>
       </div>
@@ -1057,8 +1173,9 @@ export const SocialLinksManager = ({ socialLinks, setSocialLinks }) => {
         socialLinks.map((s) => (s.id === id ? response.data.socialLink : s)),
       );
       setEditingId(null);
+      toast.success('Social link updated!');
     } catch (error) {
-      alert("Failed to update social link");
+      toast.error("Failed to update social link");
     } finally {
       setSaving(false);
     }
@@ -1165,8 +1282,9 @@ export const ContentEditor = ({ content, setContent }) => {
         content.map((c) => (c.id === id ? response.data.pageSection : c)),
       );
       setEditingId(null);
+      toast.success('Content updated!');
     } catch (error) {
-      alert("Failed to update content");
+      toast.error("Failed to update content");
     } finally {
       setSaving(false);
     }

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcopy *)",
+      "Bash(mkdir *)",
+      "Bash(copy *)",
+      "Bash(npm install *)",
+      "Bash(echo *)",
+      "Bash(type *)",
+      "Bash(powershell *)",
+      "Bash(npm *)",
+      "Bash(npx *)"
+    ]
+  },
+  "$version": 3
+}
